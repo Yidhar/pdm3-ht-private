@@ -1,0 +1,35 @@
+{
+  "time_utc": "2026-05-28T06:23:32+00:00",
+  "path": "/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_full",
+  "exists": true,
+  "files": 313,
+  "samples": 1281167,
+  "expected": 1281167,
+  "ready": true,
+  "bytes": 41991766672,
+  "gb_decimal": 41.992,
+  "first": "latents_rank00_shard000000.safetensors",
+  "last": "latents_rank00_shard000312.safetensors",
+  "first_shape": [
+    4096,
+    32,
+    16,
+    16
+  ],
+  "last_shape": [
+    3215,
+    32,
+    16,
+    16
+  ],
+  "keys": [
+    "labels",
+    "latents",
+    "latents_flip"
+  ],
+  "bad_count": 0,
+  "bad_preview": [],
+  "tmp_count": 0,
+  "tmp_preview": [],
+  "elapsed_sec": 2.315
+}

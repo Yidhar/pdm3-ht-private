@@ -1,0 +1,19 @@
+{
+  "kind": "b3_fullcache_launch",
+  "launched_utc": "2026-05-28T06:24:20+00:00",
+  "pid": 31771,
+  "config": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full.yaml",
+  "log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/fullcache_realdata_20260528T062419Z.log",
+  "pidfile": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/fullcache_realdata.pid",
+  "cwd": "/workspace/PDM",
+  "env": {
+    "PAE_GEN_ROOT": "/workspace/PDM/external/PAE/pae_with_generator",
+    "PYTHONUNBUFFERED": "1",
+    "TORCHDYNAMO_DISABLE": "1",
+    "XFORMERS_DISABLED": "1",
+    "DISABLE_XFORMERS": "1"
+  },
+  "pae_cache_repo": "LAXMAYDAY/pdm-pae-dinov2l-d32-imagenet256-train-full",
+  "pae_cache_url": "https://huggingface.co/datasets/LAXMAYDAY/pdm-pae-dinov2l-d32-imagenet256-train-full",
+  "notes": "Direct B3 full-cache run requested after handoff doc update. Config uses full ImageNet-1k PAE latent cache."
+}

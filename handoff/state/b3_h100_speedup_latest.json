@@ -1,0 +1,120 @@
+{
+  "code_changes": [
+    {
+      "path": "external/PAE/pae_with_generator/transport/meanflow_transport.py",
+      "summary": "Added _math_sdpa_context and wrapped full_jvp/central_fd so PyTorch forward-mode AD uses math SDPA while ordinary train forward/backward can use default/flash kernels."
+    }
+  ],
+  "config_changes": {
+    "allow_tf32": "false -> true",
+    "checkpoint_every": "1000 -> 2000",
+    "data_workers": "8 -> 12",
+    "fd_audit_every": "1000 -> 2000",
+    "global_batch_size": "4 -> 32",
+    "prefetch_factor": "4 -> 6",
+    "restore_rng": "true -> false (resume RNG state map_location compatibility; model/EMA/optimizer still restored)",
+    "sdpa_kernel": "math -> default globally; transport JVP/FD force math context"
+  },
+  "created_utc": "2026-05-28T07:00:26.394320+00:00",
+  "current": {
+    "config": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full_fast_h100.yaml",
+    "gpu_snapshot": "0, NVIDIA H100 80GB HBM3, 30315 MiB, 81559 MiB, 96 %, 544.95 W, 700.00 W",
+    "latest_checkpoint": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00003000.pt",
+    "log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/fullcache_realdata_fast_h100_b32_default_jvp_math_20260528T065556Z.log",
+    "metrics": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/metrics.jsonl",
+    "monitor_interval_sec": 120,
+    "monitor_log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_fullcache_monitor_20260528T065808Z.jsonl",
+    "monitor_pid": 39473,
+    "output_dir": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template",
+    "pid": 39137,
+    "process": "PID    PPID STAT     ELAPSED %CPU %MEM   RSS CMD\n  39137       1 Rsl        04:30  370  0.2 4712052 python /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py --config /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full_fast_h100.yaml"
+  },
+  "kind": "b3_h100_speedup_status",
+  "speedup_summary": {
+    "approx_samples_per_sec_gain_current_vs_baseline": 5.469741498794115,
+    "b16_default_with_jvp_math_patch": {
+      "batch_size": 16,
+      "count_used": 100,
+      "last": {
+        "backbone_forward_sec": 0.0379093661904335,
+        "backward_sec": 0.09461237490177155,
+        "batch_size": 16,
+        "created_at_utc": "2026-05-28T06:55:55Z",
+        "elapsed_sec": 0.44959213910624385,
+        "loss": 0.4287409782409668,
+        "peak_memory_mb": 19837.28466796875,
+        "step": 3701,
+        "target_jvp_sec": 0.251721722073853
+      },
+      "mean_elapsed_sec_per_step": 0.4706409656209871,
+      "mean_peak_memory_mb": 19837.28466796875,
+      "samples_per_sec": 33.99619066072756,
+      "step_range": [
+        3602,
+        3701
+      ],
+      "time_range_utc": [
+        "2026-05-28T06:55:08Z",
+        "2026-05-28T06:55:55Z"
+      ]
+    },
+    "baseline_bs4_math_tf32off": {
+      "batch_size": 4,
+      "count_used": 100,
+      "last": {
+        "backbone_forward_sec": 0.03669888386502862,
+        "backward_sec": 0.08018335979431868,
+        "batch_size": 4,
+        "created_at_utc": "2026-05-28T06:44:41Z",
+        "elapsed_sec": 0.3545688698068261,
+        "loss": 0.5876510143280029,
+        "peak_memory_mb": 15792.32861328125,
+        "step": 3000,
+        "target_jvp_sec": 0.18298463337123394
+      },
+      "mean_elapsed_sec_per_step": 0.3782188786519691,
+      "mean_peak_memory_mb": 15792.32861328125,
+      "samples_per_sec": 10.575886677726457,
+      "step_range": [
+        2901,
+        3000
+      ],
+      "time_range_utc": [
+        "2026-05-28T06:44:02Z",
+        "2026-05-28T06:44:41Z"
+      ]
+    },
+    "current_b32_default_with_jvp_math_patch": {
+      "batch_size": 32,
+      "count_used": 100,
+      "last": {
+        "backbone_forward_sec": 0.06650385214015841,
+        "backward_sec": 0.11347477976232767,
+        "batch_size": 32,
+        "created_at_utc": "2026-05-28T07:00:25Z",
+        "elapsed_sec": 0.5483283139765263,
+        "loss": 0.3991977572441101,
+        "peak_memory_mb": 27664.17919921875,
+        "step": 3428,
+        "target_jvp_sec": 0.3073642230592668
+      },
+      "mean_elapsed_sec_per_step": 0.5531798952259124,
+      "mean_peak_memory_mb": 27664.17919921875,
+      "samples_per_sec": 57.84736624770422,
+      "step_range": [
+        3329,
+        3428
+      ],
+      "time_range_utc": [
+        "2026-05-28T06:59:28Z",
+        "2026-05-28T07:00:25Z"
+      ]
+    }
+  },
+  "trial_notes": [
+    "Global sdpa_kernel=default without JVP/FD math context failed at step=3001 with PyTorch NotImplementedError: efficient SDPA has no forward AD implementation.",
+    "After transport patch, sdpa_kernel=default is stable with B3 MeanFlow: JVP/FD math, train forward/backward default/flash-enabled.",
+    "Current b32 run resumed from step_00003000.pt; next scheduled checkpoint is step 4000 because checkpoint_every=2000.",
+    "Throughput comparison is samples/sec. Step/sec is lower with larger batch, but same sample budget is much faster and GPU is substantially better utilized."
+  ]
+}

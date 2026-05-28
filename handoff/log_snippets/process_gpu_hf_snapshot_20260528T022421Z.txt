@@ -1,0 +1,16 @@
+## process snapshot
+
+1631005       1 Ts      07:33:16  0.0  0.0  4200 bash /workspace/PDM/experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_pae_from_cropped_follow_full.sh
+1660571       1 Ss      06:41:06  0.0  0.0  4216 bash /workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_from_cropped_follow_full.sh
+1677906 1660571 Rl      02:24:23  352  0.1 2009956 python /workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/build_diffusers_vae_latents_from_cropped_cache.py --crop-cache-dir /workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors --output-dir /workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full --repo-id diffusers/FLUX.2-dev-bnb-4bit --subfolder vae --vae-class AutoencoderKLFlux2 --backend-name AutoencoderKLFlux2_d32 --image-size 256 --batch-size 256 --latent-shard-size 4096 --max-samples 1281167 --device cuda:0 --model-dtype fp32 --save-dtype bf16 --latent-mode mode --expected-latent-channels 32 --expected-latent-hw 32x32 --resume
+1688293       1 Ssl        25:00  0.8  0.0 510708 python /workspace/PDM/.hf_publish/upload_flux2_vae_latents.py
+
+## nvidia-smi
+
+0, NVIDIA RTX PRO 6000 Blackwell Server Edition, 100, 42407, 97887
+
+## hf auth whoami
+
+user:  LAXMAYDAY
+orgs:  deepghs,sd-dreambooth-library,CyberHarem,Laxhar,MujicaLab,NewBie-AI,AnimeNexaLaxCore,LaxifireSynthetics,StrayNebulae,NoobCharPortPack
+

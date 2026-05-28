@@ -1,0 +1,177 @@
+{
+  "counts": {
+    "crop_uint8": {
+      "bad": [],
+      "complete_vs_expected": true,
+      "count_key": "labels",
+      "exists": true,
+      "expected_train_samples": 1281167,
+      "files": 313,
+      "gb_decimal": 251.908,
+      "keys": [
+        "images",
+        "labels",
+        "source_indices"
+      ],
+      "last": "images_uint8_shard000312.safetensors",
+      "last_shape": [
+        3215,
+        3,
+        256,
+        256
+      ],
+      "name": "crop_uint8",
+      "path": "/workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors",
+      "pattern": "images_uint8_shard*.safetensors",
+      "remaining_to_expected": 0,
+      "samples": 1281167,
+      "tmp_count": 0,
+      "tmp_first10": []
+    },
+    "flux2_vae": {
+      "bad": [],
+      "complete_vs_expected": false,
+      "count_key": "labels",
+      "exists": true,
+      "expected_train_samples": 1281167,
+      "files": 290,
+      "gb_decimal": 155.703,
+      "keys": [
+        "labels",
+        "latents",
+        "latents_flip"
+      ],
+      "last": "latents_rank00_shard000289.safetensors",
+      "last_shape": [
+        4096,
+        32,
+        32,
+        32
+      ],
+      "name": "flux2_vae",
+      "path": "/workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full",
+      "pattern": "latents_rank00_shard*.safetensors",
+      "remaining_to_expected": 93327,
+      "samples": 1187840,
+      "tmp_count": 0,
+      "tmp_first10": []
+    },
+    "pae": {
+      "bad": [],
+      "complete_vs_expected": false,
+      "count_key": "labels",
+      "exists": true,
+      "expected_train_samples": 1281167,
+      "files": 89,
+      "gb_decimal": 11.948,
+      "keys": [
+        "labels",
+        "latents",
+        "latents_flip"
+      ],
+      "last": "latents_rank00_shard000088.safetensors",
+      "last_shape": [
+        4096,
+        32,
+        16,
+        16
+      ],
+      "name": "pae",
+      "path": "/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_full",
+      "pattern": "latents_rank00_shard*.safetensors",
+      "remaining_to_expected": 916623,
+      "samples": 364544,
+      "tmp_count": 0,
+      "tmp_first10": []
+    }
+  },
+  "created_stamp": "20260528T022421Z",
+  "created_utc": "2026-05-28T02:24:21+00:00",
+  "expected_train_samples": 1281167,
+  "gpu_snapshot": "0, NVIDIA RTX PRO 6000 Blackwell Server Edition, 100, 42407, 97887\n",
+  "hf_auth_whoami": "user:  LAXMAYDAY\norgs:  deepghs,sd-dreambooth-library,CyberHarem,Laxhar,MujicaLab,NewBie-AI,AnimeNexaLaxCore,LaxifireSynthetics,StrayNebulae,NoobCharPortPack\n",
+  "hf_repos": {
+    "code": {
+      "private": true,
+      "repo_id": "LAXMAYDAY/pdm3-ht-20260528-code",
+      "repo_type": "model",
+      "upload_result": {
+        "commit": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/tree/main/.",
+        "created_utc": "2026-05-28T01:53:37+00:00",
+        "kind": "code_snapshot_upload",
+        "policy_summary": "Filtered snapshot only: docs/scripts/configs/patches/notes/light summaries; excludes data/external/logs/checkpoints/latents.",
+        "private": true,
+        "repo_id": "LAXMAYDAY/pdm3-ht-20260528-code",
+        "repo_type": "model",
+        "snapshot_dir": "/workspace/PDM/.hf_publish/code_snapshot",
+        "url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code"
+      },
+      "url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code"
+    },
+    "flux2_vae_latents": {
+      "launch": {
+        "latent_dir": "/workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full",
+        "log_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/logs/hf_upload_flux2_vae_latents_20260528T015927Z.log",
+        "pid": 1688293,
+        "private": true,
+        "repo_id": "LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents",
+        "repo_type": "dataset",
+        "script": "/workspace/PDM/.hf_publish/upload_flux2_vae_latents.py",
+        "started_utc": "2026-05-28T02:00:09+00:00",
+        "status": "upload_supervisor_started_waiting_for_cache_completion",
+        "target_samples": 1281167,
+        "upload_scope": "FLUX.2 VAE latent cache only; excludes raw/cropped/PAE/checkpoints/logs/tmp",
+        "url": "https://huggingface.co/datasets/LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents"
+      },
+      "private": true,
+      "repo_id": "LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents",
+      "repo_type": "dataset",
+      "url": "https://huggingface.co/datasets/LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents"
+    }
+  },
+  "hf_user": "LAXMAYDAY",
+  "log_snippets": {
+    "b3_smoke4096_tail": {
+      "bundle_path": "log_snippets/b3_smoke4096_tail_20260528T022421Z.log",
+      "bytes": 4414,
+      "source": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/010_smoke4096.log"
+    },
+    "flux2_vae_encode_tail": {
+      "bundle_path": "log_snippets/flux2_vae_encode_tail_20260528T022421Z.log",
+      "bytes": 78639,
+      "source": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/logs/flux2_from_cropped_follow_full_setsid_20260527T194322Z.outer.log"
+    },
+    "flux2_vae_hf_upload_tail": {
+      "bundle_path": "log_snippets/flux2_vae_hf_upload_tail_20260528T022421Z.log",
+      "bytes": 4570,
+      "source": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/logs/hf_upload_flux2_vae_latents_20260528T015927Z.log"
+    },
+    "pae_from_cropped_tail": {
+      "bundle_path": "log_snippets/pae_from_cropped_tail_20260528T022421Z.log",
+      "bytes": 31794,
+      "source": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/logs/010_pae_from_cropped_follow_full_gap65536_20260527T185110Z.log"
+    },
+    "process_gpu_hf_snapshot": {
+      "bundle_path": "log_snippets/process_gpu_hf_snapshot_20260528T022421Z.txt",
+      "bytes": 1460,
+      "source": "generated"
+    }
+  },
+  "policy": {
+    "code_repo_uploaded": "filtered docs/scripts/configs/patches/notes/light summaries only",
+    "excluded_from_code_repo": [
+      "data/",
+      "external/",
+      ".git/",
+      "raw ImageNet",
+      "cropped uint8 cache",
+      "PAE/FLUX latent shards",
+      "checkpoints/model weights",
+      "full logs",
+      "tmp/lock files"
+    ],
+    "latent_repo_scope": "FLUX.2 VAE latents only; PAE latents not uploaded in this step because cache is partial"
+  },
+  "process_snapshot": "1631005       1 Ts      07:33:16  0.0  0.0  4200 bash /workspace/PDM/experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_pae_from_cropped_follow_full.sh\n1660571       1 Ss      06:41:06  0.0  0.0  4216 bash /workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_from_cropped_follow_full.sh\n1677906 1660571 Rl      02:24:23  352  0.1 2009956 python /workspace/PDM/experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/build_diffusers_vae_latents_from_cropped_cache.py --crop-cache-dir /workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors --output-dir /workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full --repo-id diffusers/FLUX.2-dev-bnb-4bit --subfolder vae --vae-class AutoencoderKLFlux2 --backend-name AutoencoderKLFlux2_d32 --image-size 256 --batch-size 256 --latent-shard-size 4096 --max-samples 1281167 --device cuda:0 --model-dtype fp32 --save-dtype bf16 --latent-mode mode --expected-latent-channels 32 --expected-latent-hw 32x32 --resume\n1688293       1 Ssl        25:00  0.8  0.0 510708 python /workspace/PDM/.hf_publish/upload_flux2_vae_latents.py\n",
+  "purpose": "PDM-3-HT private HF handoff for code repo, FLUX.2 VAE latent upload, and PAE-backed parallel training."
+}

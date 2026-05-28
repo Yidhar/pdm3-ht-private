@@ -1,0 +1,27 @@
+# Heavy/local data and model artifacts
+data/
+.cache/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.parquet
+*.arrow
+*.tar
+*.tar.*
+*.zip
+*.npz
+*.npy
+
+# Experiment runtime outputs; keep configs/scripts/docs tracked
+experiments/**/results/
+experiments/**/logs/
+experiments/**/wandb/
+experiments/**/checkpoints/
+
+# Python/runtime noise
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.log
+*.pid

@@ -1,0 +1,17 @@
+{
+  "created_utc": "2026-05-28T02:25:37+00:00",
+  "file_commit": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md",
+  "folder_commit": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/tree/main/handoff",
+  "kind": "handoff_upload",
+  "policy_summary": "Uploaded handoff README, compact log snippets, and state JSON only. No data/external/checkpoints/latent shards/raw ImageNet.",
+  "private": true,
+  "repo_id": "LAXMAYDAY/pdm3-ht-20260528-code",
+  "repo_type": "model",
+  "uploaded": {
+    "bundle_local": "/workspace/PDM/.hf_publish/handoff_bundle",
+    "bundle_repo_path": "handoff/",
+    "root_doc_local": "/workspace/PDM/HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md",
+    "root_doc_repo_path": "HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md"
+  },
+  "url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code"
+}

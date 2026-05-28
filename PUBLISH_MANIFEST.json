@@ -1,0 +1,1131 @@
+{
+  "created_utc": "2026-05-28T01:52:41+00:00",
+  "excluded_count": 2342,
+  "included": [
+    {
+      "bytes": 24,
+      "path": ".gitignore",
+      "reason": "root_doc"
+    },
+    {
+      "bytes": 49194,
+      "path": "2026-05-27-pdm3-ht-research-brief-v2.1.md",
+      "reason": "root_doc"
+    },
+    {
+      "bytes": 78668,
+      "path": "2026-05-27-pdm3-ht-research-report-v2.1.md",
+      "reason": "root_doc"
+    },
+    {
+      "bytes": 35396,
+      "path": "2026-05-27-pdm3-research-brief.md",
+      "reason": "root_doc"
+    },
+    {
+      "bytes": 84963,
+      "path": "2026-05-27-pdm3-research-report.md",
+      "reason": "root_doc"
+    },
+    {
+      "bytes": 2710,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2216,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 7527,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 13563,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/results/debug_smoke_b3_mixed_w64d1_b2/b3_meanflow_mixed_precision_smoke_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3580,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/results/debug_smoke_b3_mixed_w64d1_b2/b3_meanflow_mixed_precision_smoke_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 33576,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/results/smoke_b3_mixed_w128d2_g16_b4/b3_meanflow_mixed_precision_smoke_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4035,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/results/smoke_b3_mixed_w128d2_g16_b4/b3_meanflow_mixed_precision_smoke_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 56991,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-mixed-precision-integration/scripts/run_b3_meanflow_mixed_precision_smoke.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 6359,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 4565,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1283,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/configs/b3_meanflow_tiny_smoke.yaml",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 6875,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 58882,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/patches/meanflow_production_trainer_integration.patch",
+      "reason": "experiment_patches"
+    },
+    {
+      "bytes": 19772,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/results/smoke_b3_meanflow_tiny_prod_trainer/meanflow_train_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3915,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/results/smoke_b3_meanflow_tiny_prod_trainer/meanflow_train_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3942,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1101,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1231,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/configs/DiT_B3MeanFlowTiny_PAE_DINOv2L_d32_imagenet64_smoke.yaml",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 2887,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 19742,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/results/B3MeanFlowTiny_PAE_DINOv2L_d32_imagenet64_smoke/meanflow_train_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3919,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/results/B3MeanFlowTiny_PAE_DINOv2L_d32_imagenet64_smoke/meanflow_train_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1355,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/results/file_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 6634,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke/results/summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3212,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1564,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2407,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full.yaml",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 2098,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_smoke4096.yaml",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 4175,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 14003,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/partial_fullcache_dataset_scan/dataset_snapshot.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 6025,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/partial_fullcache_dataset_scan/scan_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1761,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/config_resolved.yaml",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1113,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/dataset_snapshot.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 904,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/eval/step_00000003/eval_record.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 900,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/eval/step_00000006/eval_record.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 23734,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/train_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3353,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_realdata_4096/train_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 296,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_smoke4096.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 399,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/scan_fullcache_dataset.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2082,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/scan_latent_dataset.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 48354,
+      "path": "experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 841,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 3823,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 6139,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 17742,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/dit_tiny_jvp_stress_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2630,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/dit_tiny_jvp_stress_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 6124,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/experiment3_combined_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3274,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/mf_mixture_eq075/dit_tiny_jvp_stress_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1503,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/mf_mixture_eq075/dit_tiny_jvp_stress_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3282,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/scale_w256d4/dit_tiny_jvp_stress_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1503,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/scale_w256d4/dit_tiny_jvp_stress_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3263,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/smoke/dit_tiny_jvp_stress_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1496,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/results/smoke/dit_tiny_jvp_stress_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 27146,
+      "path": "experiments/2026-05-27-pdm3-ht-dit-tiny-jvp-stress/scripts/run_dit_tiny_jvp_stress.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2120,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2722,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1154,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/configs/flux2dev_vae_cache.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 6421,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 4797,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_batch_sweep_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2536,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_bs128_8192_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2527,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_bs256_8192_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2010,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_bs512_4096_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2512,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_bs64_8192_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1966,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_cpu_one_sample_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1158,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_follow_launch_20260527.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 689,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_follow_status_latest.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4046,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_from_cropped_full_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4046,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_from_cropped_full_summary_pass1.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1987,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_smoke64_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1074,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_smoke8192_derived_bs64.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2512,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_smoke8192_summary_bs64.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1490,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/vae_agnostic_reporting_rule_v20260527.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 28382,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/build_diffusers_vae_latents_from_cropped_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 942,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/launch_flux2_from_cropped_follow_full_setsid.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 520,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/launch_flux2_full_cache_setsid.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 5193,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_from_cropped_follow_full.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 974,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_full_cache.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 936,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_smoke64.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 962,
+      "path": "experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/scripts/run_flux2_smoke8192.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 706,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 485,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1315,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/configs/optimized_cache.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 3722,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 3471,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/cropped_full_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1718,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/cropped_smoke8192_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 5663,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/current_optimization_status_20260527T185236Z.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 7436,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/optimization_decision_and_launch_20260527T184603Z.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 653,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/pae_follow_gap65536_relaunch_20260527T185113Z.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3354,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/pae_from_cropped_full_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1892,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/results/pae_from_cropped_smoke8192_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 29892,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/build_cropped_uint8_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 17916,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/build_pae_latents_from_cropped_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 729,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_cropped_full_cache.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 723,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_cropped_smoke8192.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 4237,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_pae_from_cropped_follow_full.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 760,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_pae_from_cropped_resume_full.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 774,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-cropped256-cache-optimized/scripts/run_pae_from_cropped_smoke8192.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 8834,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2918,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 447,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/configs/batch_saturation_sweep.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 5428,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 12184,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/results/batch_saturation_extrapolation.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4755,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/results/encode_only_saturation_probe.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2439,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/results/file_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 3427,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/results/pae_latent_batch_saturation_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1293,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/results/summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 11904,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/scripts/batch_saturation_sweep.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 7368,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/scripts/pae_encode_only_saturation_probe.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 1033,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-batch-saturation/scripts/run_batch_saturation_sweep.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 3639,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2231,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 595,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/configs/imagenet1k_pae_dinov2l_d32_smoke64.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 8449,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 1572,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/patches/upstream_extract_latents_indent_fix.patch",
+      "reason": "experiment_patches"
+    },
+    {
+      "bytes": 3711,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/results/file_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 270,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/results/pae_latent_smoke64_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 5683,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/results/summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 20244,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/build_pae_latents_from_hf_imagenet.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 652,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/run_smoke64.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 1796,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/verify_img_latent_dataset.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2293,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1458,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1888,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/configs/full_cache.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 8362,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 2613,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/bottleneck_diagnosis_live_20260527T1815Z.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2453,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/cache_io_audit.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 194,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/durable_before_raw_first_restart.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2601,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/imagenet1k_train_parquet_snapshot_manifest.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1494,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/imagenet1k_train_parquet_snapshot_plan.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 5260,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/local_parquet_order_audit_before_resume.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 506,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/raw_first_restart_launch.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 821,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/raw_first_status_checkpoint.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1817,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/smoke4096_build_summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1203,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/smoke4096_progress_final.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2607,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/results/smoke4096_verify.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 42009,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/build_pae_latents_full_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 6517,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/download_imagenet1k_hf_parquet_snapshot.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2261,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/finalize_full_cache_record.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 497,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_download_train_parquet.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 507,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_download_train_parquet_dryrun.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 1159,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_full_cache.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 1214,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_full_cache_from_local_parquet.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 4257,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_raw_first_restart_chain.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 1110,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/run_smoke_full_cache_builder.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 5899,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/verify_local_parquet_order_against_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 4614,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-full-cache/scripts/verify_pae_latent_cache.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2781,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1395,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 415,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/configs/imagenet1k_pae_dinov2l_d32_smoke1024_b32.env",
+      "reason": "experiment_configs"
+    },
+    {
+      "bytes": 2818,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 1315,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/results/file_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 270,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/results/pae_latent_smoke1024_manifest.sha256",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4669,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/results/summary.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 4669,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/results/timing_extrapolation.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1159,
+      "path": "experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-scale1024-timing/scripts/run_smoke1024_timing.sh",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 578,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2477,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 4300,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 5858,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/results/jvp_local_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1895,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/results/jvp_local_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 16223,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-local-toy/scripts/run_jvp_local_toy.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 623,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1754,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2264,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 7147,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/results/jvp_toy_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1455,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/results/jvp_toy_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 16980,
+      "path": "experiments/2026-05-27-pdm3-ht-jvp-toy/scripts/run_jvp_toy.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2146,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 2749,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 12484,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 4819,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/AGGREGATE_SUMMARY.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 9497,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/aggregate_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 9695,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/bf16_diag_w128d2/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2454,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/bf16_diag_w128d2/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 9580,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/checkpoint_probe_w128d2_fp32/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2447,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/checkpoint_probe_w128d2_fp32/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 17162,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/main_w128d2_fp32/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2452,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/main_w128d2_fp32/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 13210,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/scale_w256d4_fp32/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2451,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/scale_w256d4_fp32/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 7975,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/sdpa_default_probe_w128d2_fp32/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2847,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/sdpa_default_probe_w128d2_fp32/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 10181,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2434,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8672,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-1/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2400,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-1/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8672,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-2/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2397,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-2/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8669,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-3/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2396,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_1e-3/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8673,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-2/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2399,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-2/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8672,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-3/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2397,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-3/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8672,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-4/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2397,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_fd_eps_3e-4/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 8797,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_no_tf32_eps1e-2/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2424,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/results/smoke_no_tf32_eps1e-2/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 50815,
+      "path": "experiments/2026-05-27-pdm3-ht-lightningdit-block-pae-shorttrain-stress/scripts/run_lightningdit_block_pae_shorttrain_stress.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 2049,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/README.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 1568,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/TASK.md",
+      "reason": "experiment_root_doc"
+    },
+    {
+      "bytes": 11671,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/notes/EXPERIMENT_RECORD.md",
+      "reason": "experiment_notes"
+    },
+    {
+      "bytes": 7067,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/AGGREGATE_SUMMARY.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 7872,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/aggregate_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 27402,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/main_mixed_w128d2/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2975,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/main_mixed_w128d2/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2975,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/main_mixed_w128d2/mixed_precision_synthetic_jvp_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 6257,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/rt_mixed_mask_audit/rt_mixed_mask_audit.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 1659,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/rt_mixed_mask_audit/rt_mixed_mask_audit.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 18992,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/scale_mixed_w256d4/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2971,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/scale_mixed_w256d4/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2971,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/scale_mixed_w256d4/mixed_precision_synthetic_jvp_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 12576,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/smoke_mixed_w64d1/lightningdit_block_pae_shorttrain_metrics.json",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2953,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/smoke_mixed_w64d1/lightningdit_block_pae_shorttrain_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 2953,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/results/smoke_mixed_w64d1/mixed_precision_synthetic_jvp_summary.md",
+      "reason": "experiment_results_light"
+    },
+    {
+      "bytes": 11784,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/scripts/audit_rt_mixed_mask_degeneracy.py",
+      "reason": "experiment_scripts"
+    },
+    {
+      "bytes": 58501,
+      "path": "experiments/2026-05-27-pdm3-ht-mixed-precision-synthetic-jvp/scripts/run_mixed_precision_synthetic_jvp_stress.py",
+      "reason": "experiment_scripts"
+    }
+  ],
+  "included_file_count": 221,
+  "included_total_bytes": 1604935,
+  "policy": {
+    "excluded": [
+      "data/raw ImageNet parquet",
+      "cropped uint8 cache",
+      "PAE/FLUX/Qwen latent shards",
+      "model checkpoints/weights",
+      "external dependency clones",
+      "logs, pids, temp files, binary media"
+    ],
+    "included": [
+      "top-level research briefs/reports",
+      "experiment README/TASK documents",
+      "experiment configs/scripts/patches/notes",
+      "lightweight result summaries: json/md/sha256/yaml/csv"
+    ],
+    "separate_latent_repo": "VAE latent shards are intentionally published to a separate private dataset repo, not this code repo."
+  },
+  "source_root": "/workspace/PDM"
+}

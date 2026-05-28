@@ -1,0 +1,26 @@
+stage_1:
+  target: tokenizer.PAE
+  params:
+    encoder_cls: 'InternViTwNorm'
+    encoder_config_path: './ckpts/InternViT-300M-448px-V3_5_VL1B'  # local path to InternViT checkpoint
+    encoder_input_size: 448
+    encoder_params:
+      model_path: './ckpts/InternViT-300M-448px-V3_5_VL1B'
+      normalize: true
+    use_delta_encoder: true
+    delta_depth: 6
+    delta_cross: true
+    fusion_mode: 'sft'
+    latent_dim: 32  # 32, 64 or encoder_dim(no compressed)
+    decoder_config_path: 'configs/decoder/ViTL'
+    decoder_patch_size: 32 # for patchify + merger
+
+
+
+
+eval:
+  eval_interval: 2000000
+  eval_model: true
+  data_path: '/path/to/data/imagenet/val'
+  reference_npz_path: '/path/to/imagenet_val_images.npz'
+  metrics: ['psnr', 'ssim', 'rfid']

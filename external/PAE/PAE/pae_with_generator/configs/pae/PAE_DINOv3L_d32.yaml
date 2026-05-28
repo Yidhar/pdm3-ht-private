@@ -1,0 +1,23 @@
+stage_1:
+  target: tokenizer.PAE
+  params:
+    encoder_cls: 'DINOv3withNorm'
+    encoder_config_path: './ckpts/dinov3-vitl16-pretrain-lvd1689m'  # local path to DINOv3 checkpoint
+    encoder_input_size: 256
+    encoder_params:
+      model_path: './ckpts/dinov3-vitl16-pretrain-lvd1689m'
+      normalize: true
+    use_delta_encoder: true
+    delta_depth: 6
+    delta_cross: true
+    fusion_mode: 'sft'
+    latent_dim: 32  # 32, 64 or encoder_dim(no compressed)
+    decoder_config_path: 'configs/decoder/ViTL'
+
+
+eval:
+  eval_interval: 2000000
+  eval_model: true
+  data_path: '/path/to/data/imagenet/val'
+  reference_npz_path: '/path/to/imagenet_val_images.npz'
+  metrics: ['psnr', 'ssim', 'rfid']

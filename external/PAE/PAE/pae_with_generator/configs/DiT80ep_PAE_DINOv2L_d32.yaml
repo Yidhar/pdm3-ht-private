@@ -1,0 +1,87 @@
+# pretrained dit ckpt
+ckpt_path: output/DiT80ep_PAE_DINOv2L_d32/checkpoints/0100000.pt
+
+data:
+  raw_image_path: "/path/to/data/imagenet-1k/train"
+  data_path: output/latents/PAE_DINOv2L_d32/imgnet256_normimagenet
+  fid_reference_file: '/path/to/data/imagenet/VIRTUAL_imagenet256_labeled.npz' # <---- path to your fid_reference_file.npz. download it from ADM
+  image_size: 256
+  num_classes: 1000
+  num_workers: 16
+  latent_norm: true
+  latent_multiplier: 1.0
+
+vae:
+  model_name: 'PAE_DINOv2L_d32'
+  vae_config: 'configs/pae/PAE_DINOv2L_d32.yaml'
+  per_proc_batch_size: 20
+  downsample_ratio: 16
+  vae_ckpt: '/path/to/pae_ckpts/PAE_DINOv2L_d32/checkpoints/ep-last.pt'
+  latent_dim: 32
+
+train:
+  exp_name: DiT80ep_PAE_DINOv2L_d32
+  max_steps: 100000  # epoch: 80
+  global_batch_size: 1024
+  global_seed: 0
+  output_dir: 'output'
+  ckpt: null
+  log_every: 100
+  ckpt_every: 20000
+  resume: false
+
+model:
+  in_chans: 32
+  model_type: LightningDiT-XL/1
+  use_qknorm: false
+  use_swiglu: true
+  use_rope: true
+  use_rmsnorm: true
+  wo_shift: false
+optimizer:
+  lr: 0.0002
+  beta2: 0.95
+
+
+transport:
+  loss_weight: null
+  path_type: Linear
+  prediction: velocity
+  sample_eps: null
+  train_eps: null
+  use_cosine_loss: true
+  use_lognorm: true
+  train_timestep_shift: 0.7
+
+# W CFG
+sample_wcfg:
+  atol: 1.0e-06
+  cfg_interval_start: 0.25
+  cfg_scale: 2.5
+  fid_num: 50000
+  likelihood: false
+  mode: ODE
+  num_sampling_steps: 250
+  per_proc_batch_size: 128
+  reverse: false
+  rtol: 0.001
+  sampling_method: Euler
+  timestep_shift: 0.4
+
+
+# W/O CFG
+sample_wocfg:
+  atol: 1.0e-06
+  cfg_interval_start: 0.0
+  cfg_scale: 1.0
+  fid_num: 50000
+  likelihood: false
+  mode: SDE
+  num_sampling_steps: 250
+  per_proc_batch_size: 128
+  reverse: false
+  rtol: 0.001
+  sampling_method: Euler
+  timestep_shift: 0.4
+  last_step_size: 0.004
+  last_step: Mean

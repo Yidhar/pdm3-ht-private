@@ -1,0 +1,20 @@
+{
+  "created_utc": "2026-05-28T06:26:06+00:00",
+  "kind": "handoff_update_upload",
+  "repo_id": "LAXMAYDAY/pdm3-ht-20260528-code",
+  "repo_type": "model",
+  "private": true,
+  "policy_summary": "Uploaded docs and compact state JSON only; no data/external/checkpoints/latent shards/raw ImageNet.",
+  "uploaded": {
+    "HANDOFF_2026-05-28_PAE_PUBLIC_CACHE_READY_AND_B3_STARTED.md": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/HANDOFF_2026-05-28_PAE_PUBLIC_CACHE_READY_AND_B3_STARTED.md",
+    "HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md",
+    "handoff/README.md": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/README.md",
+    "handoff/state/pae_full_cache_verified_after_hf_upload.json": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/pae_full_cache_verified_after_hf_upload.json",
+    "handoff/state/pae_public_cache_hf_remote_verified.json": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/pae_public_cache_hf_remote_verified.json",
+    "handoff/state/b3_fullcache_latest_launch.json": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/b3_fullcache_latest_launch.json",
+    "handoff/state/handoff_state_20260528T062420Z.json": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/handoff_state_20260528T062420Z.json",
+    "handoff/state/latest_handoff_timestamp.txt": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/latest_handoff_timestamp.txt",
+    "handoff/state/handoff_update_20260528T062420Z_upload_result.json": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/blob/main/handoff/state/handoff_update_20260528T062420Z_upload_result.json"
+  },
+  "url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code"
+}

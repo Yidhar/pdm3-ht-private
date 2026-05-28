@@ -1,0 +1,28 @@
+{
+  "kind": "b3_fullcache_startup_monitor",
+  "time_utc": "2026-05-28T06:33:28+00:00",
+  "pid": 31771,
+  "process": "31771       1 Rsl        09:08  478  0.1 1879528 python /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py --config /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full.yaml",
+  "log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/fullcache_realdata_20260528T062419Z.log",
+  "metrics": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/metrics.jsonl",
+  "output_dir": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template",
+  "last_train_step": 1298,
+  "last_train_loss": 0.5098568201065063,
+  "last_train_grad_finite": true,
+  "last_train_loss_finite": true,
+  "last_train_peak_memory_mb": 15792.32861328125,
+  "last_fd_step": 1000,
+  "last_fd_rel_err": 7.258136401943587e-05,
+  "last_fd_no_nan_or_inf": true,
+  "checkpoints": [
+    {
+      "name": "latest.pt",
+      "bytes": 10828654987
+    },
+    {
+      "name": "step_00001000.pt",
+      "bytes": 10828654987
+    }
+  ],
+  "first_checkpoint_ready": true
+}

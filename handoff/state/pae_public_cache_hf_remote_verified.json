@@ -1,0 +1,14 @@
+{
+  "time_utc": "2026-05-28T06:23:47+00:00",
+  "whoami": "LAXMAYDAY",
+  "repo_id": "LAXMAYDAY/pdm-pae-dinov2l-d32-imagenet256-train-full",
+  "url": "https://huggingface.co/datasets/LAXMAYDAY/pdm-pae-dinov2l-d32-imagenet256-train-full",
+  "private": false,
+  "sha": "963c63d140712dfd300d837867e779f7c5d53a68",
+  "total_files": 317,
+  "safetensors_count": 313,
+  "safetensors_bytes": 41991766672,
+  "has_README": true,
+  "has_cache_summary": true,
+  "has_manifest": true
+}
