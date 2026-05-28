@@ -232,3 +232,26 @@ Compact result table:
 结论：A/B（TF32 off，math/default SDPA）在 `eps=3e-3/1e-3` 回到 `~7.7e-4–9.6e-4`，`eps=1e-2` 也低于 `1e-2`；C（当前 fast 口径，TF32 on）显著变差且 eps 越小越差。因此 built-in FD 在 fast H100 b96 run 中出现 `0.05–0.11` 量级，主要判断为 **TF32 + finite-difference sensitivity / 诊断口径问题**，不是 JVP 主链路错误。所有模式 `no_nan=true`，`r=t` 退化目标检查严格为 `0`。
 
 训练恢复备注：audit 后第一次普通 `nohup` resume 在本执行环境中随父进程退出被清理，日志无 traceback，停在 step `12099` 附近；已改用 `setsid` 方式从 `latest.pt -> step_00012000.pt` 重启，避免被父进程生命周期回收。后续后台启动训练建议使用 `setsid ... < /dev/null > log 2>&1 &`。
+
+<!-- B3_B96_FD_AUDIT_SYNCED_AND_RESUMED_20260528T0920Z -->
+
+## FD audit artifacts synced; B3 training resumed stable
+
+更新时间：`2026-05-28T09:20Z`
+
+- GitHub code/docs repo updated: `https://github.com/Yidhar/pdm3-ht-private`, commit `6acab05561162c891b5ea88cb5955de9c1abc98c` (`Record B3 FD audit result and resume note`).
+- HF artifact repo updated: `https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts`, repo sha `6dcee800ae305b792cf46563a29544b098e96a79`.
+- Uploaded dedicated FD audit artifacts to HF path:
+
+```text
+b3_meanflow_realdata/fullcache_b96/step_00010000/fd_jvp_dedicated_audit_after_step_12000/fd_jvp_modes_audit.json
+b3_meanflow_realdata/fullcache_b96/step_00010000/fd_jvp_dedicated_audit_after_step_12000/fd_jvp_modes_audit.jsonl
+b3_meanflow_realdata/fullcache_b96/step_00010000/fd_jvp_dedicated_audit_after_step_12000/fd_jvp_modes_audit.md
+```
+
+Live resume checkpoint after audit: `setsid` training PID `49292` is alive and reparented to PID `1`; resumed from `latest.pt -> step_00012000.pt`; verified beyond previous stop point with last train record step `12367` @ `2026-05-28T09:19:08Z`, last50 throughput `~122.9 samples/s`, H100 snapshot `70371 MiB / 81559 MiB`, `100%` util, `~601 W`.
+
+Next expected gates:
+
+- `step_00014000.pt` checkpoint + built-in FD audit around step `14000`.
+- `step_00020000.pt` checkpoint + built-in eval/sample at step `20000`.
