@@ -84,7 +84,7 @@ meanflow:
   lognorm_sigma: 1.0
   fd_eps: 0.01
   # Strict FD/JVP correctness is now handled by dedicated TF32-off audits; keep
-  # the fast built-in audit aligned with the 10k archive/eval cadence.
+  # the fast built-in audit aligned with the 10k local checkpoint/eval cadence.
   fd_audit_every: 10000
 
 eval:

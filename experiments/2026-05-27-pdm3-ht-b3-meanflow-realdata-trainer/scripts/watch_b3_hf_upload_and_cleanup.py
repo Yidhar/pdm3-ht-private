@@ -10,8 +10,8 @@ an already-running job.  It follows the artifact routing used in this project:
 
 Default policy for the active H100 b96 run:
 
-* archive full trainer checkpoints only every 10k steps;
-* upload those archived checkpoints to
+* archive full trainer checkpoints sparsely: 100k multiples plus the final 1.07M step;
+* upload those sparse archived checkpoints to
   ``LAXMAYDAY/pdm3-ht-model-artifacts``;
 * delete uploaded archived checkpoints once they are no longer the live
   ``latest.pt`` target;
