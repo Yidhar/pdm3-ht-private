@@ -125,3 +125,34 @@ GPU snapshot:
 ```text
 0, NVIDIA H100 80GB HBM3, 70371 MiB, 81559 MiB, 100 %, 584.89 W, 700.00 W, 60
 ```
+
+## Follow-up — 2026-05-28T07:44:44Z — B3 b96 reached step 6000 durable checkpoint
+
+The active b96 H100 run reached the next durability gate and continued training.
+
+```json
+{"last_step": 6088, "time": "2026-05-28T07:44:43Z", "loss": 0.41259926557540894, "last100_samples_s": 118.34274827062414, "last100_mean_sec": 0.811203064005822, "last100_step_range": [5989, 6088], "rt_degen_max_abs": 0.0, "fd_step": 6000, "fd_time": "2026-05-28T07:43:14Z", "fd_rel": 0.08643620461852597, "fd_no_nan_or_inf": true, "fd_degen_target_minus_v": 0.0, "checkpoint_step": 6000, "checkpoint_time": "2026-05-28T07:43:31Z", "checkpoint_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00006000.pt"}
+```
+
+Runtime pointers:
+
+```text
+pid: 41529
+config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full_fast_h100_b96.yaml
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/fullcache_realdata_fast_h100_b96_skip_eq_jvp_20260528T071553Z.log
+latest_checkpoint: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00006000.pt
+monitor_pid: 42029
+monitor_log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_fullcache_monitor_20260528T071828Z.jsonl
+```
+
+GPU snapshot:
+
+```text
+0, NVIDIA H100 80GB HBM3, 74421 MiB, 81559 MiB, 72 %, 562.66 W, 700.00 W, 62
+```
+
+The new durable local model checkpoint is `step_00006000.pt` and `latest.pt` points to it. FD audit at step 6000 passed with finite values. Per artifact-routing policy, this checkpoint was **not** committed to GitHub. It should be uploaded only to the HF model artifacts repo if/when a model artifact publish is requested:
+
+```text
+https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+```

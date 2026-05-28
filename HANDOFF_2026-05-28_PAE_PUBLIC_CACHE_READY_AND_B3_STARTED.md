@@ -484,3 +484,23 @@ push_result: 9f9db46..592238c main -> main
 处理细节：远端已有初始 `main`，所以没有 force push；先 fetch/merge `origin/main`，冲突文件采用本地当前 source snapshot，非冲突远端文件保留。push 前 artifact 检查通过，无 data/results/logs/checkpoints/PAE latent/model weight 被纳入 GitHub。
 
 push 期间 b96 训练仍在跑：`{"last_step": 5748, "time": "2026-05-28T07:39:46Z", "loss": 0.3704003691673279, "last100_samples_s": 120.89864530931222, "to_6000": 252, "rt_degen_max_abs": 0.0, "last_fd_step": 4000, "last_fd_rel": 0.11669899379970686, "last_checkpoint_step": 4000}`。
+
+<!-- B3_B96_STEP6000_DURABLE_20260528T074445Z -->
+
+## 15. B3 b96 reached step 6000 durable checkpoint
+
+更新时间：`2026-05-28T07:44:44Z`
+
+b96 H100 run 已通过下一个持久化 gate，并继续训练。
+
+```json
+{"last_step": 6088, "time": "2026-05-28T07:44:43Z", "loss": 0.41259926557540894, "last100_samples_s": 118.34274827062414, "last100_mean_sec": 0.811203064005822, "last100_step_range": [5989, 6088], "rt_degen_max_abs": 0.0, "fd_step": 6000, "fd_time": "2026-05-28T07:43:14Z", "fd_rel": 0.08643620461852597, "fd_no_nan_or_inf": true, "fd_degen_target_minus_v": 0.0, "checkpoint_step": 6000, "checkpoint_time": "2026-05-28T07:43:31Z", "checkpoint_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00006000.pt"}
+```
+
+当前最新持久 checkpoint：
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00006000.pt
+```
+
+FD audit step 6000 已通过，`no_nan_or_inf=true`，`all_r_eq_t_degenerate_target_minus_v_max_abs=0.0`。`latest.pt` 已指向 `step_00006000.pt`。按 artifact routing 约定，此 checkpoint 没有提交到 GitHub；如需发布模型产物，只上传到：<https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts>。
