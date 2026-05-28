@@ -897,3 +897,117 @@ path: b3_meanflow_realdata/fullcache_b96/step_00010000/inception_eval_64_seed202
 ```
 
 Caveat: these FID/MMD/KID numbers are still early `64`-sample diagnostics, not publishable 50k FID. They are useful for same-run trend monitoring and pipeline verification.
+
+<!-- B3_B96_FDLOSS_DEFER_FID_CONVERGENCE_WATCH_20260528T1202Z -->
+
+## B3 b96 route decision: defer Representation Fréchet FD-loss, measure base MeanFlow FID convergence
+
+更新时间：`2026-05-28T12:02Z`
+
+Decision update:
+
+- **Representation Fréchet Loss / FD-loss is deferred for now.** Do not add FD-loss to the active trainer yet.
+- Continue the current **PAE latent + LightningDiT B3/XL + MeanFlow objective** path and measure how far the image-space FID/MMD/KID diagnostics converge before post-training.
+- Keep the terminology distinct:
+  - `fd_audit` / `fd_rel_err_full_jvp` in trainer logs = finite-difference JVP audit, not Representation Fréchet Loss.
+  - `FID/MMD/KID` = image-space evaluation diagnostics.
+  - `FD-loss` = future Representation Fréchet Loss post-training, currently inactive.
+
+Current mainline at this decision update:
+
+```json
+{
+  "type": "train_step",
+  "step": 24395,
+  "created_at_utc": "2026-05-28T12:02:07Z",
+  "batch_size": 96,
+  "label_min": 1,
+  "label_max": 991,
+  "label_unique_count": 93,
+  "class_cond_injected": true,
+  "force_drop_count": 14,
+  "force_drop_total": 96,
+  "precision_recipe": "bf16_backbone_fp32_jvp",
+  "backbone_forward_mode": "bf16_autocast",
+  "jvp_target_mode": "fp32",
+  "fd_audit_mode": "fp32",
+  "jvp_param_source": "live",
+  "ema_used_for_target_jvp": false,
+  "target_detached": true,
+  "r_t_sampling_granularity": "sample_level",
+  "configured_equal_prob": 0.75,
+  "r_eq_t_count": 66,
+  "r_eq_t_total": 96,
+  "realized_r_eq_t_fraction": 0.6875,
+  "target_jvp_sec": 0.29190411418676376,
+  "target_jvp_peak_memory_mb": 12018.00048828125,
+  "target_jvp_effective_batch": 30,
+  "target_jvp_skipped_equal_batch": 66,
+  "target_requires_grad": false,
+  "target_jvp_u_finite": true,
+  "du_finite": true,
+  "target_finite": true,
+  "du_norm": 185.23731994628906,
+  "v_norm": 1254.45068359375,
+  "du_over_v_norm_ratio": 0.14766409103913206,
+  "actual_rt_samples_target_minus_v_max_abs": 0.0,
+  "backbone_forward_sec": 0.1810024380683899,
+  "backbone_forward_peak_memory_mb": 58975.13720703125,
+  "u_finite": true,
+  "bf16_forward_vs_fp32_rel_err": 0.007437853805106772,
+  "fp32_reference_forward_norm": 610.7955932617188,
+  "loss_finite": true,
+  "loss_mean": 0.3517903685569763,
+  "loss": 0.3517903685569763,
+  "backward_sec": 0.3018683339469135,
+  "backward_peak_memory_mb": 59064.298828125,
+  "grad_norm_before_clip": 0.2101142257452011,
+  "grad_clip_threshold": 1.0,
+  "grad_is_finite": true,
+  "optimizer_step_applied": true,
+  "elapsed_sec": 0.8359481291845441,
+  "peak_memory_mb": 59064.298828125
+}
+```
+
+Current comparable FID trend file:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/fid_convergence_summary.md
+```
+
+Current comparable 64-sample diagnostics:
+
+| step | FID ↓ | Inception RBF-MMD ↓ | poly3-KID ↓ | gen image std | real image std |
+|---:|---:|---:|---:|---:|---:|
+| 10000 | 372.095178 | 0.104331 | 0.147350 | 0.165529 | 0.276980 |
+| 20000 | 319.811400 | 0.046369 | 0.060060 | 0.271553 | 0.276980 |
+
+A CPU-only watcher has been started to automatically evaluate future trainer samples every 10k steps starting at step 30000 without occupying the H100 training path:
+
+```text
+watcher script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/watch_b3_fid_convergence.sh
+watcher pid: 55440
+watcher log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_fid_convergence_watch_20260528T120036Z.log
+```
+
+Watcher behavior:
+
+- Polls trainer progress every `180s`.
+- Detects new `eval/step_*/sample_latents.safetensors` for steps `>=30000`.
+- Runs CPU PAE decode + CPU torchvision Inception metrics through `decode_and_inception_eval_step.py`.
+- Writes per-step metrics to `eval/step_xxxxx/inception_eval/inception_metrics.json`.
+- Maintains:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/fid_convergence_summary.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/fid_convergence_summary.md
+```
+
+Next natural gate:
+
+```text
+step 30000: checkpoint + EMA sample + CPU PAE decode + 64/64 Inception FID/MMD/KID convergence point
+```
+
+Caveat: these are still early small-sample `64 generated / 64 real` convergence diagnostics, not official 50k FID. Use them for same-run trend monitoring and pipeline validation.
