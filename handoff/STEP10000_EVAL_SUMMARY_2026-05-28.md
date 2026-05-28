@@ -470,3 +470,69 @@ Current mainline at doc update:
 ```
 
 Next: keep the fast H100 b96 mainline running; next natural gates are the next periodic checkpoints/FD smoke and a larger/periodic image-space eval if sample count or schedule is increased.
+
+<!-- B3_B96_TREND_SNAPSHOT_20260528T1126Z -->
+
+## B3 b96 loss / FID / MMD trend snapshot
+
+更新时间：`2026-05-28T11:27Z`
+
+为了让 step-10000 与 step-20000 的 image-space 指标可比，补跑了 step-10000 的同口径 full-64 CPU PAE decode + real ImageNet-256 Inception eval：同一 real seed `20260528`、`64` generated / `64` real、torchvision InceptionV3 pool-2048。
+
+Comparable 64-sample Inception diagnostics:
+
+| step | FID ↓ | Inception RBF-MMD ↓ | poly3-KID ↓ | gen image std | real image std |
+|---:|---:|---:|---:|---:|---:|
+| 10000 | 372.095178 | 0.104331 | 0.147350 | 0.165529 | 0.276980 |
+| 20000 | 319.811400 | 0.046369 | 0.060060 | 0.271553 | 0.276980 |
+
+Relative change from step-10000 to step-20000:
+
+```text
+FID:            -14.05%
+Inception MMD:  -55.56%
+KID:            -59.24%
+```
+
+Interpretation:
+
+- Image-space diagnostics improved clearly from 10k to 20k: FID down about `14%`, MMD down about `56%`, KID down about `59%`.
+- The generated image standard deviation moved from `0.1655` at 10k to `0.2716` at 20k, close to the sampled real reference std `0.2770`; this is consistent with samples becoming less washed-out / closer in low-level contrast statistics.
+- Training loss is **not monotonically decreasing** after the early phase. It dropped strongly in the first several thousand steps, then plateaued and drifted slightly upward while image-space metrics improved. Treat loss as a training-health signal, not the sole quality metric.
+
+Loss means by step bin:
+
+| step bin | mean loss |
+|---:|---:|
+| 1-1k | 0.524857 |
+| 1k-2k | 0.430982 |
+| 2k-4k | 0.411007 |
+| 4k-6k | 0.391033 |
+| 6k-8k | 0.385693 |
+| 8k-10k | 0.388462 |
+| 10k-12k | 0.389656 |
+| 12k-14k | 0.392543 |
+| 14k-16k | 0.395027 |
+| 16k-18k | 0.396849 |
+| 18k-20k | 0.398791 |
+
+Current mainline at trend update:
+
+```json
+{
+  "latest_step": 21822,
+  "created_at_utc": "2026-05-28T11:27:04Z",
+  "loss": 0.41953331232070923,
+  "batch_size": 96
+}
+```
+
+HF upload for the comparable step-10000 full-64 eval:
+
+```text
+commit: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/c7e1cc80e87cc43f9a8e335cd252279c53d358fb
+sha: c7e1cc80e87cc43f9a8e335cd252279c53d358fb
+path: b3_meanflow_realdata/fullcache_b96/step_00010000/inception_eval_64_seed20260528/
+```
+
+Caveat: these FID/MMD/KID numbers are still early `64`-sample diagnostics, not publishable 50k FID. They are useful for same-run trend monitoring and pipeline verification.
