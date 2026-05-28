@@ -70,3 +70,28 @@ https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
 ```
 
 No model checkpoint has been uploaded in this note; current latest durable training checkpoint remains local at `step_00004000.pt` until b96 reaches `step_00006000.pt`.
+
+## Follow-up — 2026-05-28T07:31:31Z
+
+Prepared local Git commit for the GitHub code repo:
+
+```text
+staging_repo: /workspace/pdm3-ht-private-sync
+branch: main
+commit: see `git -C /workspace/pdm3-ht-private-sync log -1 --oneline`
+bundle: see latest `/workspace/pdm3-ht-private-sync_*.bundle`
+```
+
+A direct push was attempted and failed only because the machine has no GitHub credential:
+
+```text
+fatal: could not read Username for 'https://github.com': terminal prompts disabled
+```
+
+The HF model artifacts repository README and this handoff note were updated successfully:
+
+```text
+repo: LAXMAYDAY/pdm3-ht-model-artifacts
+latest observed sha after doc upload: 11e6003743181a85f635a2f658ae568d6ee7302f
+uploaded doc: handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md
+```

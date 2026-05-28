@@ -454,3 +454,14 @@ git push -u origin main
 ```
 
 HF artifacts repo 已验证存在且为 private：`LAXMAYDAY/pdm3-ht-model-artifacts`。当前未上传训练 checkpoint；先等 b96 到 `step_00006000.pt` 落盘后再按需发布模型产物。
+
+<!-- GITHUB_HF_ARTIFACTS_PROGRESS_FOLLOWUP_20260528T073131Z -->
+
+### 14.1 Follow-up: local Git commit ready; HF artifacts doc updated
+
+更新时间：`2026-05-28T07:31:31Z`
+
+- GitHub staging repo 已提交本地 commit，路径 `/workspace/pdm3-ht-private-sync`；具体 hash 用 `git -C /workspace/pdm3-ht-private-sync log -1 --oneline` 查看。
+- 已生成可手工导入的 bundle；最新 bundle 用 `ls -lh /workspace/pdm3-ht-private-sync_*.bundle` 查看。
+- 已尝试 `git push -u origin main`，失败原因仅为本机无 GitHub credential：`fatal: could not read Username for 'https://github.com': terminal prompts disabled`。
+- HF model artifacts repo 文档已更新成功，最新 observed sha：`11e6003743181a85f635a2f658ae568d6ee7302f`；上传了 `handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md`。
