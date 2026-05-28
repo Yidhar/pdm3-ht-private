@@ -1,0 +1,58 @@
+data:
+  data_path: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/data/tiny_pae_latents_safetensors
+  image_size: 256
+  num_classes: 1000
+  num_workers: 0
+  latent_norm: false
+  latent_multiplier: 1.0
+
+vae:
+  model_name: PAE_DINOv2L_d32
+  downsample_ratio: 16
+  latent_dim: 32
+
+train:
+  exp_name: smoke_b3_meanflow_tiny_prod_trainer
+  output_dir: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-production-trainer-integration/results
+  max_steps: 8
+  global_batch_size: 4
+  global_seed: 20260527
+  device: auto
+  log_every: 1
+  use_ema: true
+  ema_decay: 0.9999
+  sdpa_kernel: math
+  allow_tf32: false
+
+model:
+  model_type: B3MeanFlowLightningDiT-Tiny/1
+  in_chans: 32
+  class_dropout_prob: 0.1
+  use_qknorm: false
+  use_swiglu: true
+  use_rope: true
+  use_rmsnorm: true
+  wo_shift: false
+  use_abs_pos: true
+  use_checkpoint: false
+  meanflow_init_scheme: stress_nonzero
+  meanflow_adaln_init_std: 0.02
+  meanflow_final_linear_init: xavier
+
+optimizer:
+  lr: 0.0001
+  beta1: 0.9
+  beta2: 0.95
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+
+meanflow:
+  precision_recipe: bf16_backbone_fp32_jvp
+  equal_prob: 0.75
+  time_sampler: ltg
+  t_low: 0.05
+  t_high: 0.95
+  lognorm_mu: -0.4
+  lognorm_sigma: 1.0
+  fd_eps: 0.01
+  fd_audit_every: 4

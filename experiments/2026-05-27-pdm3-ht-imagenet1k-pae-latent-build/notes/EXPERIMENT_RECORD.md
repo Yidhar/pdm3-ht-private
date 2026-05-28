@@ -1,0 +1,261 @@
+# Experiment Record — ImageNet-1k PAE latent build
+
+## 2026-05-27 — setup and audit
+
+### Intent
+
+User specified the raw data source as Hugging Face ImageNet-1k:
+
+- `https://huggingface.co/datasets/ILSVRC/imagenet-1k`
+
+Therefore the required data prerequisite is:
+
+`HF ILSVRC/imagenet-1k raw image` → `PAE_DINOv2L_d32 encoder` → `safetensors latent shards` → `ImgLatentDataset` → `Phase0/B3 real-latent MeanFlow smoke`.
+
+### Directory policy
+
+Large persistent assets are kept outside this experiment directory:
+
+- PAE checkpoint: `/workspace/PDM/data/pae_ckpts/PAE_DINOv2L_d32/AE-models/dinov2-large.pt`
+- Future real ImageNet smoke latents: `/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_smoke64`
+- Future full ImageNet train latents: `/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train`
+
+Experiment-local `data/` only contains tiny synthetic format smoke artifacts.
+
+### Switchyard / no-context delegation
+
+- `switchyard host list` failed: command not found.
+- Codex subagent bridge also failed due local wrapper/sandbox errors.
+- Continued locally and recorded logs.
+
+### HF ImageNet-1k access
+
+Log: `logs/020_hf_access_probe.log`, `logs/041_script_access_check_only_after_lazy_import.log`
+
+Results:
+
+- HF repo metadata visible:
+  - `ILSVRC/imagenet-1k`, `private=False`, `gated=auto`.
+- Local HF auth status:
+  - `huggingface-cli whoami` says `Not logged in`.
+- `datasets.load_dataset('ILSVRC/imagenet-1k', split='train', streaming=True)` failed with:
+  - `DatasetNotFoundError: Dataset 'ILSVRC/imagenet-1k' is a gated dataset on the Hub. You must be authenticated to access it.`
+
+Conclusion: actual ImageNet sample access is BLOCKED until dataset terms are accepted and this machine is authenticated with an authorized HF token.
+
+### PAE checkpoint
+
+Logs: `logs/030_download_pae_ckpt.log`, `logs/031_inspect_pae_ckpt.log`
+
+Downloaded:
+
+- Repo: `yuezhengrong/PAE-collections`
+- File: `AE-models/dinov2-large.pt`
+- Local path: `/workspace/PDM/data/pae_ckpts/PAE_DINOv2L_d32/AE-models/dinov2-large.pt`
+- Size: `2,904,456,562` bytes (`2.705 GiB`)
+- Checkpoint top-level keys: `['model']`
+- Model tensors: `996`
+
+### Dependency fixes
+
+Log: `logs/060_pip_install_transformers_omegaconf.log`
+
+- Upgraded `transformers` from `4.44.2` to `4.57.6` because the original version did not expose `Dinov2WithRegistersModel`, which PAE's DINOv2-with-registers encoder imports directly.
+- Installed `omegaconf==2.3.0` because upstream `extract_latents.py` imports it.
+
+Verification:
+
+- `from transformers import Dinov2WithRegistersModel` PASS.
+- `from tokenizer.pae import PAE` PASS.
+- FlashAttention is not installed; PAE import continues with fallback path.
+
+### Upstream extraction script fix
+
+Log: `logs/011_audit_code_details.log`, `logs/012_fix_upstream_extract_latents_compile.log`
+
+Found:
+
+- `external/PAE/pae_with_generator/extract_latents.py` had `IndentationError` at the checkpoint-loading block.
+
+Fixed:
+
+- Corrected indentation of lines around `cleaned_state_dict` / `load_state_dict`.
+- `python -m py_compile external/PAE/pae_with_generator/extract_latents.py` now PASS.
+
+Note: the new HF pipeline uses the experiment script below rather than the upstream ImageFolder-only script.
+
+### New HF latent build script
+
+Script:
+
+- `scripts/build_pae_latents_from_hf_imagenet.py`
+
+Features:
+
+- Loads HF `ILSVRC/imagenet-1k` in streaming mode.
+- Uses ADM center crop to 256.
+- Converts PIL RGB images to `[0,1]` tensors; PAE handles DINO normalization internally.
+- Loads `PAE_DINOv2L_d32` config and checkpoint.
+- Encodes normal and horizontally flipped images.
+- Writes `safetensors` shards with keys:
+  - `latents`: `[N, 32, 16, 16]`
+  - `latents_flip`: `[N, 32, 16, 16]`
+  - `labels`: `[N]`
+- Default model/save dtype: BF16.
+- Supports `--access-check-only`, `--random-self-test`, `--self-test-only`, and `--synthetic-save-test`.
+
+Wrapper:
+
+- `scripts/run_smoke64.sh`
+
+Config:
+
+- `configs/imagenet1k_pae_dinov2l_d32_smoke64.env`
+
+### PAE random encode self-test
+
+Log: `logs/070_random_pae_encode_self_test_only.log`
+
+Command used random tensors, no HF data.
+
+Result: PASS
+
+- Load state: `missing=0`, `unexpected=5`
+- Unexpected keys are only `teacher_latent_compressor.*`.
+- Random input shape: `[1, 3, 256, 256]`
+- PAE latent shape: `[1, 32, 16, 16]`
+- Latent dtype: `torch.bfloat16`
+- CUDA peak: `1407.447265625 MB`
+
+### Synthetic safetensors / ImgLatentDataset format smoke
+
+Log: `logs/080_synthetic_pae_safetensors_format_smoke8.log`
+
+Because real HF ImageNet access is gated, ran a synthetic save-path smoke with random images to validate the engineering path from PAE encode → safetensors → repository `ImgLatentDataset`.
+
+Result: PASS
+
+Output:
+
+- `/workspace/PDM/experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/data/pae_random_format_smoke8/latents_rank00_shard000.safetensors`
+- `build_summary.json`
+- `latents_stats.pt` generated by `ImgLatentDataset(latent_norm=True)`
+
+Shard schema:
+
+- `latents`: `[8, 32, 16, 16]`, `BF16`
+- `latents_flip`: `[8, 32, 16, 16]`, `BF16`
+- `labels`: `[8]`, `I64`
+
+`ImgLatentDataset` verification:
+
+- len: `8`
+- first feature shape: `[32, 16, 16]`
+- first feature dtype: `torch.bfloat16`
+- first label: `0`
+- CUDA peak for synthetic save smoke: `1469.849609375 MB`
+
+### Storage
+
+Log: `logs/090_storage_summary.log`
+
+- PAE checkpoint dir: `2.8G`
+- Experiment local data: `2.3M`
+- HF cache after DINO/processor model fetch: `1.2G`
+- No full ImageNet download/encoding was started.
+
+## Current status
+
+Pipeline engineering is READY, but real ImageNet latent smoke is BLOCKED by HF gated dataset auth.
+
+## Exact unblock steps
+
+1. Accept/access the dataset page with the HF account:
+   - `https://huggingface.co/datasets/ILSVRC/imagenet-1k`
+2. Authenticate this machine, without logging the token:
+   - `huggingface-cli login`
+   - or `export HF_TOKEN=...`
+3. Re-run:
+
+```bash
+cd /workspace/PDM
+bash experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/run_smoke64.sh \
+  2>&1 | tee experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/logs/100_hf_imagenet_smoke64_after_auth.log
+```
+
+Expected output after auth:
+
+- `/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_smoke64/latents_rank00_shard000.safetensors`
+- `build_summary.json`
+- then verify with:
+
+```bash
+python experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/verify_img_latent_dataset.py \
+  /workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_smoke64 --latent-norm
+```
+
+After that passes, run Phase0/B3 real-latent MeanFlow smoke against the smoke64 latent directory.
+
+## 2026-05-27 post-HF-login completion
+
+User completed Hugging Face login/authorization. Verified account:
+
+- `hf auth whoami`: `LAXMAYDAY`
+
+### HF ImageNet access check
+
+Logs:
+
+- `logs/100_hf_auth_access_check_after_login.log`
+- `logs/101_hf_access_check_after_hard_exit_patch.log`
+
+Result: PASS
+
+- Dataset: `ILSVRC/imagenet-1k`
+- Split: `train`
+- Streaming sample keys: `['image', 'label']`
+- First sample image: `JpegImageFile`, size `(817, 363)`, RGB
+- First sample label: `726`
+
+Quirk: the first post-login access check reached `ACCESS_CHECK_OK` but crashed at Python finalization inside datasets streaming. Added/used `--hard-exit`; hard-exit access check completed cleanly.
+
+### Real HF ImageNet smoke64 → PAE_DINOv2L_d32 latents
+
+Command/log:
+
+```bash
+cd /workspace/PDM
+bash experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/scripts/run_smoke64.sh \
+  2>&1 | tee experiments/2026-05-27-pdm3-ht-imagenet1k-pae-latent-build/logs/110_hf_imagenet_smoke64_pae_latent_build.log
+```
+
+Result: PASS
+
+- Output dir: `/workspace/PDM/data/pae_latents/PAE_DINOv2L_d32/imagenet256_train_smoke64`
+- Seen / encoded: `64` / `64`
+- Num shards: `1`
+- Elapsed seconds: `8.960774183273315`
+- CUDA peak MB: `1552.083984375`
+- Shard: `latents_rank00_shard000.safetensors`
+- Schema: `latents` `[64,32,16,16]` BF16; `latents_flip` `[64,32,16,16]` BF16; `labels` `[64]` I64
+- Labels min/max: `6` / `983`
+
+### ImgLatentDataset verification
+
+Log: `logs/120_verify_hf_imagenet_smoke64_imglatentdataset.log`
+
+Result: PASS
+
+- len: `64`
+- first shape: `[32, 16, 16]`
+- first dtype: `torch.bfloat16`
+- first label: `726`
+
+### Downstream
+
+This latent directory is now valid input for Phase0/B3. It was consumed by Experiment 9:
+
+- `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-real-imagenet64-smoke`
+
+Experiment 9 B3 MeanFlow real-latent smoke result: PASS.
+

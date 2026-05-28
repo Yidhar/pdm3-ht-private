@@ -1,0 +1,38 @@
+# Heavy model/data artifacts
+/data/
+/external/
+/.hf_publish/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.npz
+*.npy
+*.bin
+*.onnx
+
+# Generated training/eval payloads
+**/logs/
+**/__pycache__/
+**/.pytest_cache/
+**/checkpoints/
+**/sample_latents.safetensors
+**/decoded_flux2vae_png*/
+**/decoded_*_png*/
+**/preview_grid.png
+**/contact_sheet.*
+**/metrics.jsonl
+**/log.txt
+**/events.out.tfevents*
+
+# Local/editor/runtime
+.DS_Store
+*.tmp
+*.swp
+*.pid
+*.tmux_session
+
+# Generated result directories are local by default; commit compact summaries manually only if needed.
+**/results/
+**/data/
+*.logpath

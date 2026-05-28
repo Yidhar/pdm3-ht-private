@@ -1,0 +1,34 @@
+--- a/external/PAE/pae_with_generator/extract_latents.py
++++ b/external/PAE/pae_with_generator/extract_latents.py
+@@ -161,19 +161,19 @@ def main(args):
+     vae = PAE(**pae_params)
+     # load model ckpt (don't use ema ckpt)
+     state_dict = torch.load(pae_ckpt_path, map_location="cpu", weights_only=False)["model"]
+-        cleaned_state_dict = {}
+-        for key, value in state_dict.items():
+-            new_key = key
+-            for prefix in ("module.", "_orig_mod."):
+-                while new_key.startswith(prefix):  new_key = new_key[len(prefix):]
+-            cleaned_state_dict[new_key] = value
+-        msg = vae.load_state_dict(cleaned_state_dict, strict=False)
+-        if rank == 0:
+-            missing, unexpected = msg
+-            print(f"Missing keys: {missing}")
+-            print(f"Unexpected keys: {unexpected}")
+-        vae = vae.to(device).to(torch.bfloat16).eval()
+-        del cleaned_state_dict, state_dict
++    cleaned_state_dict = {}
++    for key, value in state_dict.items():
++        new_key = key
++        for prefix in ("module.", "_orig_mod."):
++            while new_key.startswith(prefix):  new_key = new_key[len(prefix):]
++        cleaned_state_dict[new_key] = value
++    msg = vae.load_state_dict(cleaned_state_dict, strict=False)
++    if rank == 0:
++        missing, unexpected = msg
++        print(f"Missing keys: {missing}")
++        print(f"Unexpected keys: {unexpected}")
++    vae = vae.to(device).to(torch.bfloat16).eval()
++    del cleaned_state_dict, state_dict
+     if rank == 0:
+         print(f"VAE model loaded!")
