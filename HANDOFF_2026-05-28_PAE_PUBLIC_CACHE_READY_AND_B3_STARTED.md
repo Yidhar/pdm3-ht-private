@@ -465,3 +465,22 @@ HF artifacts repo 已验证存在且为 private：`LAXMAYDAY/pdm3-ht-model-artif
 - 已生成可手工导入的 bundle；最新 bundle 用 `ls -lh /workspace/pdm3-ht-private-sync_*.bundle` 查看。
 - 已尝试 `git push -u origin main`，失败原因仅为本机无 GitHub credential：`fatal: could not read Username for 'https://github.com': terminal prompts disabled`。
 - HF model artifacts repo 文档已更新成功；上传了 `handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md`。最新 repo sha 用 Hugging Face API 查询。
+
+<!-- GITHUB_PUSH_COMPLETE_20260528T073948Z -->
+
+### 14.2 GitHub push complete
+
+更新时间：`2026-05-28T07:39:46Z`
+
+GitHub 授权已完成并已成功推送到：<https://github.com/Yidhar/pdm3-ht-private>
+
+```text
+branch: main
+pushed_head_before_this_note: 592238cc4e69bbbb0c3a68cdf11309b92f23e425
+remote_main_after_push: 592238cc4e69bbbb0c3a68cdf11309b92f23e425
+push_result: 9f9db46..592238c main -> main
+```
+
+处理细节：远端已有初始 `main`，所以没有 force push；先 fetch/merge `origin/main`，冲突文件采用本地当前 source snapshot，非冲突远端文件保留。push 前 artifact 检查通过，无 data/results/logs/checkpoints/PAE latent/model weight 被纳入 GitHub。
+
+push 期间 b96 训练仍在跑：`{"last_step": 5748, "time": "2026-05-28T07:39:46Z", "loss": 0.3704003691673279, "last100_samples_s": 120.89864530931222, "to_6000": 252, "rt_degen_max_abs": 0.0, "last_fd_step": 4000, "last_fd_rel": 0.11669899379970686, "last_checkpoint_step": 4000}`。

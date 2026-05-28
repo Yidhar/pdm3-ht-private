@@ -95,3 +95,33 @@ repo: LAXMAYDAY/pdm3-ht-model-artifacts
 latest repo sha: check with `HfApi().repo_info("LAXMAYDAY/pdm3-ht-model-artifacts", repo_type="model").sha`
 uploaded doc: handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md
 ```
+
+## Follow-up — 2026-05-28T07:39:46Z — GitHub push complete
+
+GitHub authorization is now active as `Yidhar`, and the prepared code snapshot was pushed successfully.
+
+```text
+repo: https://github.com/Yidhar/pdm3-ht-private
+branch: main
+pushed_head_before_this_note: 592238cc4e69bbbb0c3a68cdf11309b92f23e425
+remote_main_after_push: 592238cc4e69bbbb0c3a68cdf11309b92f23e425
+push_result: 9f9db46..592238c main -> main
+```
+
+Notes:
+
+- The remote already had an initial `main` commit, so I fetched and merged `origin/main` instead of force-pushing.
+- Add/add conflicts were resolved in favor of the local current source snapshot, while preserving non-conflicting remote-only files through the merge.
+- Artifact exclusion check passed before push: no `data/`, `results/`, `logs/`, `.pt`, `.ckpt`, `.safetensors`, or `.parquet` files were tracked.
+
+Training status during push:
+
+```json
+{"last_step": 5748, "time": "2026-05-28T07:39:46Z", "loss": 0.3704003691673279, "last100_samples_s": 120.89864530931222, "to_6000": 252, "rt_degen_max_abs": 0.0, "last_fd_step": 4000, "last_fd_rel": 0.11669899379970686, "last_checkpoint_step": 4000}
+```
+
+GPU snapshot:
+
+```text
+0, NVIDIA H100 80GB HBM3, 70371 MiB, 81559 MiB, 100 %, 584.89 W, 700.00 W, 60
+```
