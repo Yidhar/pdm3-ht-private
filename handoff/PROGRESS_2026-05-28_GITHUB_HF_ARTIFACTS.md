@@ -182,3 +182,32 @@ https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
 主训练未中断，当前最后记录：step `10441` @ `2026-05-28T08:44:23Z`，last200 约 `119.135` samples/s（如有）。
 
 FD 风险：step `10000` built-in FD audit finite/no_nan，但 `fd_rel=0.061354188` 仍高于 practical gate `1e-2`；专项 A/B/C eps sweep 脚本已准备好：`experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/audit_fd_jvp_modes.py`。建议等 GPU 空出或在下一个 durable checkpoint 后短暂停训运行，避免与当前 74GB H100 主训抢显存。
+
+
+<!-- B3_B96_STEP10000_EVAL_SYNCED_20260528T0849Z -->
+
+## Step 10000 eval smoke artifacts synced
+
+更新时间：`2026-05-28T08:46:29Z`
+
+GitHub code/docs sync complete:
+
+```text
+repo: https://github.com/Yidhar/pdm3-ht-private
+branch: main
+commit: 5f53937046bff6e4b51ee30d2b2416ad15ccd93c
+commit_msg: Add B3 step10000 eval smoke and FD audit tools
+```
+
+Included in GitHub: new decode helper, FD A/B/C audit helper, and handoff summaries. Artifact exclusion check passed before push; no checkpoint/cache/results/logs were committed.
+
+HF model artifacts sync complete:
+
+```text
+repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+repo_sha_after_upload: 616b9c47d548936710111e49d619c4fe7ad26273
+eval_artifact_dir: b3_meanflow_realdata/fullcache_b96/step_00010000/eval
+summary_doc: handoff/STEP10000_EVAL_SUMMARY_2026-05-28.md
+```
+
+Uploaded lightweight step-10000 eval artifacts to HF: `sample_latents.safetensors`, `decoded_samples.npz`, generated/real-ref PNGs, grids, `compact_metrics.json`, `compact_metrics.md`, and `eval_record.json`. The multi-GB training checkpoint remains local only unless explicitly publishing checkpoints to HF.
