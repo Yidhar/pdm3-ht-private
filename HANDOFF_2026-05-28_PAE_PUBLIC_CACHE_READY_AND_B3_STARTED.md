@@ -559,3 +559,37 @@ summary_doc: handoff/STEP10000_EVAL_SUMMARY_2026-05-28.md
 ```
 
 Uploaded lightweight step-10000 eval artifacts to HF: `sample_latents.safetensors`, `decoded_samples.npz`, generated/real-ref PNGs, grids, `compact_metrics.json`, `compact_metrics.md`, and `eval_record.json`. The multi-GB training checkpoint remains local only unless explicitly publishing checkpoints to HF.
+
+<!-- B3_B96_DEDICATED_FD_AUDIT_DONE_20260528T0916Z -->
+
+## Dedicated FD/JVP A/B/C audit complete
+
+更新时间：`2026-05-28T09:16Z`
+
+专项 FD/JVP audit 已按用户建议在 durable `step_00012000.pt` 后短暂停训执行；audit 使用 `step_00010000.pt`、固定 seed、小 batch `8`、`model.eval()`、`equal_prob=0` 非退化 batch、class dropout 关闭、JVP/FD fp32，并 sweep `eps=[1e-2, 3e-3, 1e-3]`。
+
+Audit 输出：
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fd_jvp_dedicated_audit/step_00010000_after_step_12000_20260528T085000Z/fd_jvp_modes_audit.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fd_jvp_dedicated_audit/step_00010000_after_step_12000_20260528T085000Z/fd_jvp_modes_audit.jsonl
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fd_jvp_dedicated_audit/step_00010000_after_step_12000_20260528T085000Z/fd_jvp_modes_audit.md
+```
+
+Compact result table:
+
+| mode | TF32 | global SDPA | eps | fd_rel | abs_err | du_norm | fd_norm | no_nan | backbone_rel | degen_target-v |
+|---|---:|---|---:|---:|---:|---:|---:|---|---:|---:|
+| A | off | math | 1e-02 | `0.00752493` | `1.15436` | `153.831` | `153.404` | true | `0.00623756` | `0` |
+| A | off | math | 3e-03 | `0.000765322` | `0.1177` | `153.831` | `153.792` | true | `0.00623756` | `0` |
+| A | off | math | 1e-03 | `0.00095552` | `0.146983` | `153.831` | `153.825` | true | `0.00623756` | `0` |
+| B | off | default | 1e-02 | `0.00752493` | `1.15436` | `153.831` | `153.404` | true | `0.00623485` | `0` |
+| B | off | default | 3e-03 | `0.000765322` | `0.1177` | `153.831` | `153.792` | true | `0.00623485` | `0` |
+| B | off | default | 1e-03 | `0.00095552` | `0.146983` | `153.831` | `153.825` | true | `0.00623485` | `0` |
+| C | on | default | 1e-02 | `0.0401946` | `6.18794` | `153.789` | `153.95` | true | `0.00624116` | `0` |
+| C | on | default | 3e-03 | `0.125223` | `19.385` | `153.789` | `154.804` | true | `0.00624116` | `0` |
+| C | on | default | 1e-03 | `0.348566` | `56.6146` | `153.789` | `162.421` | true | `0.00624116` | `0` |
+
+结论：A/B（TF32 off，math/default SDPA）在 `eps=3e-3/1e-3` 回到 `~7.7e-4–9.6e-4`，`eps=1e-2` 也低于 `1e-2`；C（当前 fast 口径，TF32 on）显著变差且 eps 越小越差。因此 built-in FD 在 fast H100 b96 run 中出现 `0.05–0.11` 量级，主要判断为 **TF32 + finite-difference sensitivity / 诊断口径问题**，不是 JVP 主链路错误。所有模式 `no_nan=true`，`r=t` 退化目标检查严格为 `0`。
+
+训练恢复备注：audit 后第一次普通 `nohup` resume 在本执行环境中随父进程退出被清理，日志无 traceback，停在 step `12099` 附近；已改用 `setsid` 方式从 `latest.pt -> step_00012000.pt` 重启，避免被父进程生命周期回收。后续后台启动训练建议使用 `setsid ... < /dev/null > log 2>&1 &`。
