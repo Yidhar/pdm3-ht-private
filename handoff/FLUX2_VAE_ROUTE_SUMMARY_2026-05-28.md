@@ -439,3 +439,74 @@ automatic label     = flux_rfid_not_much_worse_than_pae
 ```
 
 Therefore the requested stop condition `FLUX rFID >> PAE rFID` is **not met**. On this 100-image reconstruction-ceiling diagnostic FLUX.2 is better than PAE, so the current FLUX B3 ImageNet-256 short-run failure should be tracked as a training/sampler/latent-scale retune issue, not a VAE reconstruction-ceiling issue. Defer FLUX retuning until the PAE/mainline conditional-generation work reaches the next milestone.
+
+<!-- VAE_RFID_PROTOCOL_50K_PAE_VS_FLUX2_20260528 -->
+
+## 10. PAE-vs-FLUX.2 50K protocol rFID completed — 2026-05-28
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/VAE_RFID_PROTOCOL_50K_PAE_VS_FLUX2_2026-05-28.md
+```
+
+This supersedes the earlier same-100 diagnostic for the reconstruction-ceiling decision. Protocol:
+
+```text
+ImageNet validation 50,000 ADM-center-crop 256 originals
+same 50K -> PAE DINOv2-L d32 encode/decode -> rFID(originals, recon)
+same 50K -> FLUX.2 VAE encode/decode       -> rFID(originals, recon)
+```
+
+The direct uint8 Inception-feature path was used to avoid 150K PNG writes; N=128 direct-vs-PNG smoke matched to about `1e-4` rFID.
+
+Primary result:
+
+| VAE | rFID vs same 50K originals ↓ | PSNR ↑ | MAE ↓ |
+|---|---:|---:|---:|
+| PAE DINOv2-L d32 | `0.2648149351` | `24.238722 dB` | `0.0346135` |
+| FLUX.2 VAE | `0.1562118224` | `30.544935 dB` | `0.0173406` |
+
+Decision numbers:
+
+```text
+FLUX/PAE rFID ratio = 0.5898905298
+FLUX - PAE rFID     = -0.1086031128
+automatic label     = flux_rfid_not_much_worse_than_pae
+```
+
+Interpretation:
+
+- PAE returned `0.2648`, matching the expected paper-level `~0.26` sanity target.
+- FLUX.2 is **not worse** than PAE on this 50K reconstruction-ceiling audit; it is better under the same evaluator/protocol.
+- Therefore the FLUX ImageNet-256 B3 smoke failure remains a training/sampler/latent-scale issue, not a VAE encode-decode ceiling issue.
+- Keep the FLUX route alive, but spend follow-up effort on latent-prior/sampler retuning rather than additional VAE reconstruction checks.
+
+<!-- FLUX2_DECODE_SCALE_SWEEP_20260528 -->
+
+## 11. FLUX.2 B3 decode/output-scale sweep completed — 2026-05-28
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_DECODE_SCALE_SWEEP_2026-05-28.md
+```
+
+New helper:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/sweep_flux2vae_decode_scale.py
+```
+
+Input: existing per-channel-normalized FLUX B3 step-1000 `sample_latents.safetensors`, 1024 images, ImageNet-256 train ADM real FID/MMD evaluator.
+
+Best result from the combined scale sweep:
+
+| scale | decode std | decode/ref std | FID ↓ | MMD2/KID ↓ |
+|---:|---:|---:|---:|---:|
+| `0.35` | `0.940596` | `0.548758` | **`322.3539`** | **`0.324473`** |
+| `0.40` | `1.074353` | `0.626794` | `322.4108` | `0.328168` |
+| `0.64` | `1.716666` | `1.001530` | `344.6390` | `0.400106` |
+| `1.00` official inverse | `2.680442` | `1.563813` | `372.7879` | `0.469827` |
+
+Interpretation: eval-time compression improves the official inverse baseline (`372.79 -> 322.35` FID), but the std-matched scale `~0.64` is not optimal and the best scale is under-dispersed relative to real FLUX raw latents. Therefore this is not a simple raw-latent std mismatch; the FLUX step-1000 B3 latent prior/sampler is still bad. Next FLUX action should be checkpoint resampling sweep (`sample_steps 4/8/16`, EMA/live if cheap), then lower-LR/longer short-train retune if sampling does not solve it.

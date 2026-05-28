@@ -1005,3 +1005,74 @@ Cosine plan for later:
 - Live LR unchanged for now: `2e-4` constant.
 - Batch-scaled MeanFlow reference plan for batch `96`: `base_lr=7.5e-5`, `min_lr=7.5e-6`, `warmup_steps=13333`, `end_step=1070000`.
 - If switching the current run later, do not rewarm; override restored optimizer LR after checkpoint load and optionally ramp from `2e-4` down to the cosine target over `2k–5k` steps.
+
+<!-- VAE_RFID_PROTOCOL_50K_PAE_VS_FLUX2_20260528 -->
+
+## Update — 50K protocol rFID reconstruction ceiling: PAE vs FLUX.2
+
+更新时间：`2026-05-28T19:30Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/VAE_RFID_PROTOCOL_50K_PAE_VS_FLUX2_2026-05-28.md
+```
+
+New direct-feature script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_vae_rfid_ceiling_50k_direct.py
+```
+
+Local artifacts only, not for Git:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/vae_rfid_protocol_val50k_pae_vs_flux2_direct_20260528T182712Z/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/065_vae_rfid_protocol_val50k_pae_vs_flux2_direct_20260528T182712Z.log
+```
+
+Protocol:
+
+```text
+ImageNet validation 50K, ADM center crop 256
+original 50K distribution vs deterministic VAE reconstruction 50K distribution
+primary metric: rFID, Inception pool-2048
+```
+
+Primary result:
+
+| VAE | rFID vs same 50K originals ↓ | PSNR ↑ | MAE ↓ |
+|---|---:|---:|---:|
+| PAE DINOv2-L d32 | `0.2648149351` | `24.238722 dB` | `0.0346135` |
+| FLUX.2 VAE | `0.1562118224` | `30.544935 dB` | `0.0173406` |
+
+Decision: PAE returns the expected paper-level `~0.26`; FLUX.2 is not reconstruction-ceiling limited on ImageNet-val 256 under this protocol. Current FLUX B3 poor generated-sample FID should be treated as training/sampler/latent-scale mismatch.
+
+<!-- FLUX2_DECODE_SCALE_SWEEP_20260528 -->
+
+## 11. FLUX.2 B3 decode/output-scale sweep completed — 2026-05-28
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_DECODE_SCALE_SWEEP_2026-05-28.md
+```
+
+New helper:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/sweep_flux2vae_decode_scale.py
+```
+
+Input: existing per-channel-normalized FLUX B3 step-1000 `sample_latents.safetensors`, 1024 images, ImageNet-256 train ADM real FID/MMD evaluator.
+
+Best result from the combined scale sweep:
+
+| scale | decode std | decode/ref std | FID ↓ | MMD2/KID ↓ |
+|---:|---:|---:|---:|---:|
+| `0.35` | `0.940596` | `0.548758` | **`322.3539`** | **`0.324473`** |
+| `0.40` | `1.074353` | `0.626794` | `322.4108` | `0.328168` |
+| `0.64` | `1.716666` | `1.001530` | `344.6390` | `0.400106` |
+| `1.00` official inverse | `2.680442` | `1.563813` | `372.7879` | `0.469827` |
+
+Interpretation: eval-time compression improves the official inverse baseline (`372.79 -> 322.35` FID), but the std-matched scale `~0.64` is not optimal and the best scale is under-dispersed relative to real FLUX raw latents. Therefore this is not a simple raw-latent std mismatch; the FLUX step-1000 B3 latent prior/sampler is still bad. Next FLUX action should be checkpoint resampling sweep (`sample_steps 4/8/16`, EMA/live if cheap), then lower-LR/longer short-train retune if sampling does not solve it.

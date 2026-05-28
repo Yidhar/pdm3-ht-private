@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small PAE-vs-FLUX.2 VAE rFID ceiling diagnostic.
+"""PAE-vs-FLUX.2 VAE reconstruction rFID ceiling diagnostic.
 
 This script intentionally answers one narrow question:
 
@@ -10,6 +10,11 @@ This script intentionally answers one narrow question:
 It uses the existing cropped uint8 safetensor cache so both VAEs see exactly the
 same images.  Runtime outputs are experiment artifacts and should stay out of
 Git (experiments/**/results is ignored).
+
+The original smoke was N=100; the same protocol is now also used for paper-scale
+N=50K reconstruction rFID audits.  For 50K, MMD/KID is normally skipped because
+the pairwise polynomial MMD path is intentionally quadratic and unnecessary for
+the primary rFID question.
 """
 from __future__ import annotations
 
@@ -84,7 +89,14 @@ def images_to_uint8(x: torch.Tensor, mode: str) -> torch.Tensor:
     return y.round().clamp(0, 255).to(torch.uint8)
 
 
-def save_png_batch(images_u8: torch.Tensor, output_dir: Path, *, offset: int = 0) -> List[str]:
+def save_png_batch(
+    images_u8: torch.Tensor,
+    output_dir: Path,
+    *,
+    offset: int = 0,
+    log_every: int = 0,
+    log_prefix: str = "SAVE_PNG",
+) -> List[str]:
     output_dir.mkdir(parents=True, exist_ok=True)
     if images_u8.ndim != 4 or images_u8.shape[1] != 3:
         raise RuntimeError(f"Expected [B,3,H,W] uint8 images, got {tuple(images_u8.shape)}")
@@ -92,8 +104,12 @@ def save_png_batch(images_u8: torch.Tensor, output_dir: Path, *, offset: int = 0
     for i in range(int(images_u8.shape[0])):
         name = f"{offset + i:06d}.png"
         arr = images_u8[i].permute(1, 2, 0).contiguous().cpu().numpy()
-        Image.fromarray(arr, mode="RGB").save(output_dir / name)
+        # 50K protocol writes 150K PNGs (original + two recon dirs).  Use a low
+        # lossless compression level to avoid making PNG encoding the bottleneck.
+        Image.fromarray(arr, mode="RGB").save(output_dir / name, compress_level=1)
         names.append(name)
+        if int(log_every) > 0 and ((offset + i + 1) % int(log_every) == 0):
+            print(f"{log_prefix} saved={offset + i + 1}", flush=True)
     return names
 
 
@@ -382,6 +398,7 @@ def reconstruct_pae(
     model_dtype: torch.dtype,
     batch_size: int,
     output_dir: Path,
+    log_every_batches: int = 0,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     output_dir.mkdir(parents=True, exist_ok=True)
     pix = PixelDiffStats()
@@ -389,8 +406,17 @@ def reconstruct_pae(
     decoded_stats = TensorStats()
     started = time.perf_counter()
     use_autocast = device.type == "cuda" and model_dtype in {torch.bfloat16, torch.float16}
-    for s in range(0, int(images_u8.shape[0]), int(batch_size)):
+    total = int(images_u8.shape[0])
+    for batch_idx, s in enumerate(range(0, total, int(batch_size))):
         e = min(int(images_u8.shape[0]), s + int(batch_size))
+        if int(log_every_batches) > 0 and (batch_idx % int(log_every_batches) == 0):
+            elapsed = time.perf_counter() - started
+            done = max(1, s)
+            print(
+                f"PAE_RECON_PROGRESS batch={batch_idx} images={s}/{total} "
+                f"elapsed_sec={elapsed:.1f} samples_per_sec={done / max(elapsed, 1e-9):.3f}",
+                flush=True,
+            )
         x_u8 = images_u8[s:e].contiguous()
         x = x_u8.to(device=device, dtype=torch.float32, non_blocking=True).div_(255.0)
         if device.type == "cuda":
@@ -431,14 +457,24 @@ def reconstruct_flux(
     batch_size: int,
     output_dir: Path,
     latent_mode: str,
+    log_every_batches: int = 0,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     output_dir.mkdir(parents=True, exist_ok=True)
     pix = PixelDiffStats()
     latent_stats = TensorStats()
     decoded_stats = TensorStats()
     started = time.perf_counter()
-    for s in range(0, int(images_u8.shape[0]), int(batch_size)):
+    total = int(images_u8.shape[0])
+    for batch_idx, s in enumerate(range(0, total, int(batch_size))):
         e = min(int(images_u8.shape[0]), s + int(batch_size))
+        if int(log_every_batches) > 0 and (batch_idx % int(log_every_batches) == 0):
+            elapsed = time.perf_counter() - started
+            done = max(1, s)
+            print(
+                f"FLUX2_RECON_PROGRESS batch={batch_idx} images={s}/{total} "
+                f"elapsed_sec={elapsed:.1f} samples_per_sec={done / max(elapsed, 1e-9):.3f}",
+                flush=True,
+            )
         x_u8 = images_u8[s:e].contiguous()
         x = x_u8.to(device=device, dtype=torch.float32, non_blocking=True).div_(127.5).sub_(1.0)
         if model_dtype != torch.float32:
@@ -494,6 +530,8 @@ def compute_pairwise_image_metrics(
     full_ref_stats: str,
     full_ref_features: str,
     mmd_max_ref: int,
+    skip_mmd: bool,
+    log_every_batches: int = 0,
 ) -> Dict[str, Any]:
     started = time.perf_counter()
     model = build_inception(dims=int(dims), device=device)
@@ -503,6 +541,8 @@ def compute_pairwise_image_metrics(
         device=device,
         batch_size=int(batch_size),
         num_workers=int(num_workers),
+        log_every_batches=int(log_every_batches),
+        log_prefix="INCEPTION_ORIGINAL_FEATURES",
     )
     orig_mu, orig_sigma = covariance_from_features(original_features)
     metrics: Dict[str, Any] = {
@@ -520,7 +560,7 @@ def compute_pairwise_image_metrics(
     if full_ref_stats:
         full_ref = load_reference_stats(Path(full_ref_stats).resolve())
     full_ref_bank: Optional[Tuple[np.ndarray, Dict[str, Any]]] = None
-    if full_ref_features:
+    if full_ref_features and not bool(skip_mmd):
         full_ref_bank = load_feature_bank(Path(full_ref_features).resolve(), max_ref=int(mmd_max_ref) if mmd_max_ref else None)
 
     for name, recon_dir in recon_dirs.items():
@@ -530,21 +570,44 @@ def compute_pairwise_image_metrics(
             device=device,
             batch_size=int(batch_size),
             num_workers=int(num_workers),
+            log_every_batches=int(log_every_batches),
+            log_prefix=f"INCEPTION_{name.upper()}_FEATURES",
         )
         mu, sigma = covariance_from_features(feats)
         rfid = frechet_distance(mu, sigma, orig_mu, orig_sigma, features1=feats, sqrt_device=sqrt_device)
-        mmd2 = polynomial_mmd2_unbiased(feats, original_features, device=mmd_device, chunk_size=int(mmd_chunk_size))
         rec: Dict[str, Any] = {
             "images_dir": str(recon_dir),
             "num_images": int(feats.shape[0]),
             "image_meta": meta,
+            "rfid_vs_original": float(rfid),
+            # Backward-compatible names from the first 100-image smoke.
             "rfid_vs_original_100": float(rfid),
-            "mmd2_vs_original_100": float(mmd2),
-            "kid_x1000_vs_original_100": float(mmd2 * 1000.0),
             "feature_mean": float(feats.mean()),
             "feature_std": float(feats.std()),
             "sigma_trace": float(np.trace(sigma)),
         }
+        if bool(skip_mmd):
+            rec.update(
+                {
+                    "mmd2_vs_original": None,
+                    "kid_x1000_vs_original": None,
+                    "mmd2_vs_original_100": None,
+                    "kid_x1000_vs_original_100": None,
+                    "mmd_skipped": True,
+                    "mmd_skip_reason": "skip_mmd enabled; 50K protocol primary metric is rFID",
+                }
+            )
+        else:
+            mmd2 = polynomial_mmd2_unbiased(feats, original_features, device=mmd_device, chunk_size=int(mmd_chunk_size))
+            rec.update(
+                {
+                    "mmd2_vs_original": float(mmd2),
+                    "kid_x1000_vs_original": float(mmd2 * 1000.0),
+                    "mmd2_vs_original_100": float(mmd2),
+                    "kid_x1000_vs_original_100": float(mmd2 * 1000.0),
+                    "mmd_skipped": False,
+                }
+            )
         if full_ref is not None:
             ref_mu, ref_sigma, ref_meta = full_ref
             fid_full = frechet_distance(mu, sigma, ref_mu, ref_sigma, features1=feats, sqrt_device=sqrt_device)
@@ -567,15 +630,18 @@ def compute_pairwise_image_metrics(
             )
         metrics["reconstructions"][name] = rec
 
+    orig_n = int(original_features.shape[0])
     metrics.update(
         {
             "status": "ok",
             "created_at_utc": utc_now(),
-            "metric_scope": "same_100_image_reconstruction_fid_original_distribution_vs_recon_distribution",
+            "metric_scope": f"same_{orig_n}_image_reconstruction_fid_original_distribution_vs_recon_distribution",
+            "protocol": "same_N_image_reconstruction_rfid_original_distribution_vs_recon_distribution",
             "dims": int(dims),
             "device": str(device),
             "sqrt_device": str(sqrt_device),
             "mmd_device": str(mmd_device),
+            "skip_mmd": bool(skip_mmd),
             "elapsed_sec": float(time.perf_counter() - started),
         }
     )
@@ -587,8 +653,9 @@ def render_summary_md(summary: Dict[str, Any]) -> str:
     cmp = summary.get("comparison", {}) or {}
     pae = cmp.get("pae", {}) or {}
     flux = cmp.get("flux2", {}) or {}
+    n = summary.get("sample_count")
     lines = [
-        "# 100-image VAE rFID ceiling: PAE vs FLUX.2",
+        f"# {n}-image VAE reconstruction rFID ceiling: PAE vs FLUX.2",
         "",
         f"- created_at_utc: `{summary.get('created_at_utc')}`",
         f"- status: `{summary.get('status')}`",
@@ -596,12 +663,12 @@ def render_summary_md(summary: Dict[str, Any]) -> str:
         f"- source: `{summary.get('sample_meta', {}).get('crop_cache_dir')}`",
         f"- output_dir: `{summary.get('output_dir')}`",
         "",
-        "## Primary same-image rFID",
+        "## Primary same-image reconstruction rFID",
         "",
-        "| VAE | rFID vs same 100 originals ↓ | MMD2/KID ↓ | KID x1000 ↓ | PSNR ↑ | MAE ↓ |",
+        f"| VAE | rFID vs same {n} originals ↓ | MMD2/KID ↓ | KID x1000 ↓ | PSNR ↑ | MAE ↓ |",
         "|---|---:|---:|---:|---:|---:|",
-        f"| PAE DINOv2L d32 | `{pae.get('rfid_vs_original_100')}` | `{pae.get('mmd2_vs_original_100')}` | `{pae.get('kid_x1000_vs_original_100')}` | `{pae.get('pixel_metrics', {}).get('psnr_db_global')}` | `{pae.get('pixel_metrics', {}).get('mae_0_1')}` |",
-        f"| FLUX.2 VAE | `{flux.get('rfid_vs_original_100')}` | `{flux.get('mmd2_vs_original_100')}` | `{flux.get('kid_x1000_vs_original_100')}` | `{flux.get('pixel_metrics', {}).get('psnr_db_global')}` | `{flux.get('pixel_metrics', {}).get('mae_0_1')}` |",
+        f"| PAE DINOv2L d32 | `{pae.get('rfid_vs_original', pae.get('rfid_vs_original_100'))}` | `{pae.get('mmd2_vs_original', pae.get('mmd2_vs_original_100'))}` | `{pae.get('kid_x1000_vs_original', pae.get('kid_x1000_vs_original_100'))}` | `{pae.get('pixel_metrics', {}).get('psnr_db_global')}` | `{pae.get('pixel_metrics', {}).get('mae_0_1')}` |",
+        f"| FLUX.2 VAE | `{flux.get('rfid_vs_original', flux.get('rfid_vs_original_100'))}` | `{flux.get('mmd2_vs_original', flux.get('mmd2_vs_original_100'))}` | `{flux.get('kid_x1000_vs_original', flux.get('kid_x1000_vs_original_100'))}` | `{flux.get('pixel_metrics', {}).get('psnr_db_global')}` | `{flux.get('pixel_metrics', {}).get('mae_0_1')}` |",
         "",
         "## Decision diagnostic",
         "",
@@ -609,8 +676,8 @@ def render_summary_md(summary: Dict[str, Any]) -> str:
         f"- flux_minus_pae_rfid: `{cmp.get('flux_minus_pae_rfid')}`",
         f"- automatic_label: `{cmp.get('automatic_label')}`",
         "",
-        "Interpretation guardrail: this is a 100-image engineering ceiling check, not a publishable rFID. "
-        "Use it to decide whether FLUX.2 reconstruction is obviously much worse than PAE on the same ImageNet-256 crops.",
+        "Interpretation guardrail: this is a reconstruction-ceiling audit only. "
+        "It tests whether the VAE can reconstruct ImageNet-256 crops under the same protocol; it does not prove latent-prior or sampler quality.",
         "",
     ]
     return "\n".join(lines)
@@ -666,7 +733,14 @@ def run(args: argparse.Namespace) -> Dict[str, Any]:
         start_index=int(args.start_index),
         max_images=int(args.max_images),
     )
-    save_png_batch(images_u8, original_dir, offset=0)
+    print("SAVING_ORIGINAL_PNG", flush=True)
+    save_png_batch(
+        images_u8,
+        original_dir,
+        offset=0,
+        log_every=int(args.png_log_every),
+        log_prefix="SAVE_ORIGINAL_PNG",
+    )
     sample_meta["labels_head"] = labels[: min(20, int(labels.shape[0]))].tolist() if labels is not None else None
     sample_meta["source_indices_head"] = source_indices[: min(20, int(source_indices.shape[0]))].tolist() if source_indices is not None else None
     write_json(output_dir / "sample_meta.json", sample_meta)
@@ -684,6 +758,7 @@ def run(args: argparse.Namespace) -> Dict[str, Any]:
         model_dtype=pae_dtype,
         batch_size=int(args.pae_batch_size),
         output_dir=pae_dir,
+        log_every_batches=int(args.log_every_batches),
     )
     del pae
     if device.type == "cuda":
@@ -700,6 +775,7 @@ def run(args: argparse.Namespace) -> Dict[str, Any]:
         batch_size=int(args.flux_batch_size),
         output_dir=flux_dir,
         latent_mode=args.flux_latent_mode,
+        log_every_batches=int(args.log_every_batches),
     )
     del flux_vae
     if device.type == "cuda":
@@ -720,10 +796,12 @@ def run(args: argparse.Namespace) -> Dict[str, Any]:
         full_ref_stats=args.full_ref_stats,
         full_ref_features=args.full_ref_features,
         mmd_max_ref=int(args.mmd_max_ref),
+        skip_mmd=bool(args.skip_mmd),
+        log_every_batches=int(args.log_every_batches),
     )
 
-    pae_rfid = float(metrics["reconstructions"]["pae"]["rfid_vs_original_100"])
-    flux_rfid = float(metrics["reconstructions"]["flux2"]["rfid_vs_original_100"])
+    pae_rfid = float(metrics["reconstructions"]["pae"].get("rfid_vs_original", metrics["reconstructions"]["pae"]["rfid_vs_original_100"]))
+    flux_rfid = float(metrics["reconstructions"]["flux2"].get("rfid_vs_original", metrics["reconstructions"]["flux2"]["rfid_vs_original_100"]))
     ratio = float(flux_rfid / pae_rfid) if pae_rfid > 0 else float("inf")
     delta = float(flux_rfid - pae_rfid)
     if ratio >= float(args.much_worse_ratio) and delta >= float(args.much_worse_delta):
@@ -753,7 +831,8 @@ def run(args: argparse.Namespace) -> Dict[str, Any]:
     summary: Dict[str, Any] = {
         "status": "ok",
         "created_at_utc": utc_now(),
-        "metric_scope": "100_image_same_input_reconstruction_fid_ceiling_pae_vs_flux2",
+        "metric_scope": f"{int(images_u8.shape[0])}_image_same_input_reconstruction_fid_ceiling_pae_vs_flux2",
+        "protocol": "same_N_image_reconstruction_rfid_original_distribution_vs_recon_distribution",
         "sample_count": int(images_u8.shape[0]),
         "sample_meta": sample_meta,
         "output_dir": str(output_dir),
@@ -825,6 +904,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--sqrt-device", default="auto")
     p.add_argument("--mmd-device", default="auto")
     p.add_argument("--mmd-chunk-size", type=int, default=2048)
+    p.add_argument("--skip-mmd", action="store_true", help="Skip quadratic MMD/KID; recommended for 50K rFID protocol runs.")
+    p.add_argument("--png-log-every", type=int, default=5000, help="Print PNG save progress every N images; 0 disables.")
+    p.add_argument("--log-every-batches", type=int, default=250, help="Print VAE reconstruction progress every N batches; 0 disables.")
     p.add_argument("--full-ref-stats", default="/workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_stats.npz")
     p.add_argument("--full-ref-features", default="/workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_mmd8192_features.npz")
     p.add_argument("--mmd-max-ref", type=int, default=8192)

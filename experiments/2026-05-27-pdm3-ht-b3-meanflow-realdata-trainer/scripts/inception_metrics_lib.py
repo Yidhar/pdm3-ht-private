@@ -148,6 +148,8 @@ def features_from_image_dir(
     num_workers: int,
     max_images: Optional[int] = None,
     recursive: bool = False,
+    log_every_batches: int = 0,
+    log_prefix: str = "INCEPTION_FEATURES",
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
     files = list_image_files(images_dir, recursive=recursive)
     if max_images is not None:
@@ -164,7 +166,11 @@ def features_from_image_dir(
         pin_memory=(device.type == "cuda"),
     )
     feats: List[np.ndarray] = []
-    for batch in dl:
+    total = len(files)
+    for batch_idx, batch in enumerate(dl):
+        if int(log_every_batches) > 0 and (batch_idx % int(log_every_batches) == 0):
+            done = min(batch_idx * int(batch_size), total)
+            print(f"{log_prefix} dir={images_dir} batch={batch_idx} images={done}/{total}", flush=True)
         batch = batch.to(device=device, dtype=torch.float32, non_blocking=True)
         feats.append(inception_forward(model, batch).cpu().numpy().astype(np.float32, copy=False))
     arr = np.concatenate(feats, axis=0)

@@ -939,3 +939,121 @@ Conclusion:
 - On this same-100 reconstruction ceiling check, FLUX.2 is better than PAE in rFID and pixel metrics.
 - Therefore the current FLUX B3 ImageNet-256 poor sample FID is more likely a training/sampler/output-scale issue than a FLUX VAE reconstruction-ceiling issue.
 - Action: do not spend more time retuning FLUX right now; create a deferred ticket and return to PAE/mainline conditional generation.
+
+---
+
+## 2026-05-28 — 50K protocol VAE rFID ceiling: PAE vs FLUX.2
+
+Detailed handoff:
+
+```text
+handoff/VAE_RFID_PROTOCOL_50K_PAE_VS_FLUX2_2026-05-28.md
+```
+
+Purpose: rerun the VAE reconstruction-ceiling comparison with the paper-standard 50K protocol after the same-100 diagnostic.
+
+Protocol:
+
+```text
+ImageNet validation 50,000 ADM-center-crop 256 originals
+same 50K -> PAE DINOv2-L d32 deterministic encode/decode -> rFID(originals, recon)
+same 50K -> FLUX.2 VAE deterministic mode/decode        -> rFID(originals, recon)
+```
+
+Script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_vae_rfid_ceiling_50k_direct.py
+```
+
+Run artifacts, local only:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/vae_rfid_protocol_val50k_pae_vs_flux2_direct_20260528T182712Z/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/065_vae_rfid_protocol_val50k_pae_vs_flux2_direct_20260528T182712Z.log
+```
+
+Settings:
+
+- source: `/workspace/PDM/data/cropped_uint8/imagenet1k_validation_256_adm_safetensors`;
+- sample count: `50,000`;
+- image shape: `[N, 3, 256, 256]` uint8 RGB;
+- dtype: fp32 for both VAEs;
+- TF32: off;
+- Inception dim: 2048;
+- MMD/KID: skipped; rFID is the primary metric;
+- feature implementation: direct uint8 tensor to Inception, validated against PNG path on N=128.
+
+Primary result:
+
+| VAE | rFID vs same 50K originals ↓ | PSNR ↑ | MAE ↓ | latent std |
+|---|---:|---:|---:|---:|
+| PAE DINOv2-L d32 | `0.2648149351` | `24.238722 dB` | `0.0346135` | `0.9771646` |
+| FLUX.2 VAE | `0.1562118224` | `30.544935 dB` | `0.0173406` | `1.7200218` |
+
+Runtime:
+
+| phase | elapsed | throughput |
+|---|---:|---:|
+| original features | `77.25 sec` | `647.25 img/s` |
+| PAE reconstruction/features | `1653.95 sec` | `30.23 img/s` |
+| FLUX reconstruction/features | `1810.51 sec` | `27.62 img/s` |
+| total | `3568.51 sec` | `~59.5 min` |
+
+Decision numbers:
+
+```text
+FLUX/PAE rFID ratio = 0.5898905298
+FLUX - PAE rFID     = -0.1086031128
+automatic label     = flux_rfid_not_much_worse_than_pae
+```
+
+Conclusion:
+
+- PAE rFID `0.2648` matches the expected paper-level `~0.26`, validating the 50K protocol path.
+- FLUX.2 rFID `0.1562` is better than PAE under the same protocol.
+- The FLUX route should not be stopped due to VAE reconstruction ceiling.
+- Current FLUX B3 generated-sample issues should be treated as latent-prior / MeanFlow training / sampler / output-scale problems.
+
+<!-- FLUX2_DECODE_SCALE_SWEEP_20260528 -->
+
+## 2026-05-28 — FLUX.2 B3 decode/output-scale sweep
+
+Detailed handoff:
+
+```text
+handoff/FLUX2_DECODE_SCALE_SWEEP_2026-05-28.md
+```
+
+Script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/sweep_flux2vae_decode_scale.py
+```
+
+Artifacts, local only:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_decode_scale_sweep_channelnorm_step1000_20260528T201155Z/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_decode_scale_sweep_channelnorm_step1000_lowrange_20260528T202427Z/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/066_flux2vae_decode_scale_sweep_channelnorm_step1000_20260528T201155Z.log
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/067_flux2vae_decode_scale_sweep_channelnorm_step1000_lowrange_20260528T202427Z.log
+```
+
+Combined result, 1024 images from existing channelnorm step-1000 sample latents:
+
+| scale | decode std | decode/ref std | FID ↓ | MMD2/KID ↓ |
+|---:|---:|---:|---:|---:|
+| `0.20` | `0.539710` | `0.314875` | `447.8535` | `0.567919` |
+| `0.30` | `0.806882` | `0.470748` | `329.5382` | `0.337264` |
+| `0.35` | `0.940596` | `0.548758` | **`322.3539`** | **`0.324473`** |
+| `0.40` | `1.074353` | `0.626794` | `322.4108` | `0.328168` |
+| `0.45` | `1.208138` | `0.704847` | `323.1042` | `0.336568` |
+| `0.50` | `1.341944` | `0.782911` | `328.7377` | `0.355028` |
+| `0.55` | `1.475764` | `0.860984` | `334.8103` | `0.372971` |
+| `0.64` | `1.716666` | `1.001530` | `344.6390` | `0.400106` |
+| `0.70` | `1.877281` | `1.095236` | `351.2454` | `0.417133` |
+| `0.80` | `2.144988` | `1.251420` | `361.2771` | `0.442044` |
+| `1.00` | `2.680442` | `1.563813` | `372.7879` | `0.469827` |
+
+Conclusion: output scale compression helps but does not solve FLUX B3. The std-matched scale `~0.64` is not best; best FID occurs with decode/ref std `~0.55`. Treat scale `0.35` as diagnostic only. Next FLUX step is checkpoint resampling/sample-step sweep before lower-LR retraining.
