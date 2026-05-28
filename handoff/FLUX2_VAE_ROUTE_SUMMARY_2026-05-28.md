@@ -244,3 +244,85 @@ Detailed handoff:
 ```text
 handoff/FLUX2_VAE_RECON_DIAGNOSTIC_2026-05-28.md
 ```
+
+---
+
+## Update — FLUX.2 latent_std confirmed as real cache scale
+
+Detailed diagnostic:
+
+```text
+handoff/FLUX2_LATENT_STD_DIAGNOSTIC_2026-05-28.md
+```
+
+Key stats:
+
+| scan | samples | mean | std | RMS |
+|---|---:|---:|---:|---:|
+| FLUX first 16 shards, `latents+latents_flip` | `131,072` | `-0.00923639` | `1.71402432` | `1.71404920` |
+| FLUX linspace 32 shards, `latents` | `130,191` | `-0.00905418` | `1.71404304` | `1.71406695` |
+| PAE linspace 32 shards, local partial cache | `131,072` | `0.21101030` | `0.97748311` | `0.99999928` |
+
+Verdict: FLUX raw `latent_std ~= 1.714` is a real property of the cached FLUX latents. The problem is not VAE reconstruction quality; it is that the current B3/MeanFlow FLUX route uses raw FLUX latents while the transport noise/sampler endpoint is `N(0,1)` and eval decode currently applies no inverse scaling.
+
+Recommended first fix/smoke:
+
+```text
+train latent_multiplier = 0.5834159221481118
+eval/decode pre_decode_scale = 1.7140430386576422
+```
+
+Then, if improved, implement per-channel `latent_norm: true` plus inverse decode from trainer stats.
+
+<!-- FLUX2_SCALEAWARE_B3_SMOKE_20260528 -->
+
+## FLUX normalized / scale-aware B3 smoke completed
+
+更新时间：`2026-05-28T13:10Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_SCALEAWARE_B3_SMOKE_2026-05-28.md
+```
+
+What was run:
+
+- Full ImageNet-256 FLUX.2 VAE latent cache: `1,281,167` samples, `[32,32,32]` latents.
+- B3-medium h512/d12, batch 128, 1000 optimizer steps.
+- Scalar training scale: `latent_multiplier=0.5834159221481118 = 1 / 1.7140430386576422`.
+- Official image eval inverse scale: `pre_decode_scale=1.7140430386576422`.
+- Mixed precision: `bf16` backbone + `fp32` JVP target.
+
+Mechanical result: **PASS**.
+
+| check | result |
+|---|---:|
+| final step | `1000` |
+| final loss | `1.240724` |
+| practical gate | `true` |
+| live-param JVP target | `true` |
+| EMA used for JVP target | `false` |
+| realized r=t fraction | `0.7491875` |
+| r=t degenerate target-v max | `0.0` |
+| final FD rel err | `3.96541e-4` |
+| loop peak memory | `16.76 GB` |
+
+Official image-space result with inverse decode scale:
+
+| step | sample std, trainer space | raw-equivalent std after inverse scale | FID ↓ | MMD2/KID ↓ |
+|---:|---:|---:|---:|---:|
+| 500 | `1.583183` | `2.713643` | `389.4661` | `0.508815` |
+| 1000 | `1.562140` | `2.677575` | `391.8537` | `0.514579` |
+
+Comparison / diagnosis:
+
+- Raw FLUX 1k baseline step 1000: `FID 348.3859`, `MMD2/KID 0.406783`.
+- Same scale-aware step-1000 samples decoded with no inverse scale, eval-only ablation: `FID 345.6951`, `MMD2/KID 0.399690`.
+- Therefore the scalar-normalized training/JVP route works mechanically, but the early sampler outputs over-dispersed normalized latents. Multiplying by `1.714` before decode produces raw-equivalent std `~2.68`, above true FLUX raw latent std `~1.714`, hurting image metrics.
+
+Conclusion:
+
+- Do not conclude “FLUX VAE bad.” Reconstruction diagnostic is still healthy.
+- Do not yet conclude scalar normalization is bad either; this is a sample/decode scale-calibration issue at 1k.
+- Before longer FLUX training, add a scale-calibrated eval diagnostic: log raw-decode-space stats and compare identity decode / official inverse decode / adaptive ref-std decode / per-channel inverse normalization.
