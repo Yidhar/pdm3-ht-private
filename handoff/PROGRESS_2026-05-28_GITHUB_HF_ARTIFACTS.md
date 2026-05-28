@@ -939,3 +939,37 @@ Five-way 1k comparison:
 | per-channel latent_norm + official inverse | `2.680442` | `372.7879` | `0.469827` |
 
 Interpretation: per-channel latent_norm is mechanically correct and slightly better than scalar official inverse, but it does not fix the FLUX smoke quality issue. The generated normalized latent std is still `~1.56`; after the correct inverse it becomes raw std `~2.68`, above the real FLUX raw std `~1.714`. This points to sampler/output-scale/training-retune issues rather than VAE reconstruction failure.
+
+<!-- VAE_RFID_CEILING_100_PAE_VS_FLUX2_20260528 -->
+
+## Update — same-100 rFID ceiling diagnostic: PAE vs FLUX.2
+
+更新时间：`2026-05-28T17:40Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/VAE_RFID_CEILING_100_PAE_VS_FLUX2_2026-05-28.md
+```
+
+New code:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_vae_rfid_ceiling_100.py
+```
+
+Local artifacts only, not for Git:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/vae_rfid_ceiling_100_pae_vs_flux2/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/060_vae_rfid_ceiling_100_pae_vs_flux2_20260528T173728Z.log
+```
+
+Result on the same 100 ImageNet-256 ADM crops:
+
+| VAE | rFID vs same originals ↓ | PSNR ↑ | MAE ↓ |
+|---|---:|---:|---:|
+| PAE DINOv2-L d32 | `15.851984` | `24.264884 dB` | `0.0341667` |
+| FLUX.2 VAE | `4.866488` | `30.733994 dB` | `0.0168896` |
+
+Decision: `FLUX rFID >> PAE rFID` is false; FLUX.2 reconstruction ceiling is not the reason to stop the route. Current FLUX B3 issues should be deferred as training/sampler/latent-scale retuning after the PAE/mainline work.

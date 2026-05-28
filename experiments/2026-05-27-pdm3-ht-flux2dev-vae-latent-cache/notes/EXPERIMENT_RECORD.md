@@ -877,3 +877,65 @@ Five-way 1k comparison:
 | per-channel latent_norm + official inverse | `2.680442` | `372.7879` | `0.469827` |
 
 Interpretation: per-channel latent_norm is mechanically correct and slightly better than scalar official inverse, but it does not fix the FLUX smoke quality issue. The generated normalized latent std is still `~1.56`; after the correct inverse it becomes raw std `~2.68`, above the real FLUX raw std `~1.714`. This points to sampler/output-scale/training-retune issues rather than VAE reconstruction failure.
+
+---
+
+## 2026-05-28 — Same-100 VAE rFID ceiling: PAE vs FLUX.2
+
+Detailed handoff:
+
+```text
+handoff/VAE_RFID_CEILING_100_PAE_VS_FLUX2_2026-05-28.md
+```
+
+Purpose: answer the requested binary reconstruction-ceiling question before spending more time on the FLUX ImageNet-256 route:
+
+```text
+same 100 ImageNet-256 ADM crops -> PAE encode/decode    -> rFID(originals, PAE recon)
+same 100 ImageNet-256 ADM crops -> FLUX.2 encode/decode -> rFID(originals, FLUX recon)
+```
+
+Script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_vae_rfid_ceiling_100.py
+```
+
+Run artifacts, local only:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/vae_rfid_ceiling_100_pae_vs_flux2/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/060_vae_rfid_ceiling_100_pae_vs_flux2_20260528T173728Z.log
+```
+
+Settings:
+
+- source: first 100 images from the local ImageNet-256 ADM cropped safetensor cache;
+- source indices: `0..99`;
+- image shape: `[100, 3, 256, 256]`;
+- deterministic VAE reconstructions: PAE `encode -> decode`, FLUX posterior `mode() -> decode`;
+- dtype: fp32 for both VAEs;
+- TF32: off;
+- Inception dim: 2048.
+
+Primary result:
+
+| VAE | rFID vs same 100 originals ↓ | MMD2/KID ↓ | KID x1000 ↓ | PSNR ↑ | MAE ↓ |
+|---|---:|---:|---:|---:|---:|
+| PAE DINOv2-L d32 | `15.851984` | `-0.00627811` | `-6.27811` | `24.264884 dB` | `0.0341667` |
+| FLUX.2 VAE | `4.866488` | `-0.00666353` | `-6.66353` | `30.733994 dB` | `0.0168896` |
+
+Decision numbers:
+
+```text
+FLUX/PAE rFID ratio = 0.306996
+FLUX - PAE rFID     = -10.985496
+automatic label     = flux_rfid_not_much_worse_than_pae
+```
+
+Conclusion:
+
+- The stop condition `FLUX rFID >> PAE rFID` is not met.
+- On this same-100 reconstruction ceiling check, FLUX.2 is better than PAE in rFID and pixel metrics.
+- Therefore the current FLUX B3 ImageNet-256 poor sample FID is more likely a training/sampler/output-scale issue than a FLUX VAE reconstruction-ceiling issue.
+- Action: do not spend more time retuning FLUX right now; create a deferred ticket and return to PAE/mainline conditional generation.
