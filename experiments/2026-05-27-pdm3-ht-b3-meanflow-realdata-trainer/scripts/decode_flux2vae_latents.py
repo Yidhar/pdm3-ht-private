@@ -228,6 +228,141 @@ def affine_latent_stats(latent_meta: Dict[str, Any], *, scale: float, shift: flo
     return out
 
 
+def vector_summary(x: torch.Tensor) -> Dict[str, float]:
+    xf = x.detach().float().view(-1)
+    return {
+        "min": float(xf.min().item()),
+        "max": float(xf.max().item()),
+        "mean": float(xf.mean().item()),
+        "std": float(xf.std(unbiased=False).item()) if xf.numel() > 1 else 0.0,
+    }
+
+
+def load_pre_decode_channel_stats(path_arg: str, *, expected_channels: int) -> Optional[Dict[str, Any]]:
+    """Load trainer-compatible per-channel latent stats for inverse decode.
+
+    The stats file is produced by compute_latent_cache_stats.py and contains
+    tensors shaped [1, C, 1, 1].  If supplied, sampled normalized latents are
+    converted back to raw FLUX VAE latent space as:
+
+        z_raw = (z_sample * pre_decode_scale + pre_decode_shift) * std + mean
+
+    With latent_multiplier=1 this is exactly the requested inverse
+    ``z_raw = z_norm * channel_std + channel_mean``.
+    """
+    if not path_arg:
+        return None
+    path = Path(path_arg).resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"pre-decode stats path does not exist: {path}")
+    stats = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(stats, dict) or "mean" not in stats or "std" not in stats:
+        raise ValueError(f"pre-decode stats must be a dict with mean/std tensors: {path}")
+    mean = torch.as_tensor(stats["mean"]).detach().float().cpu()
+    std = torch.as_tensor(stats["std"]).detach().float().cpu().clamp_min(1e-6)
+    if mean.ndim == 1:
+        mean = mean.view(1, -1, 1, 1)
+    if std.ndim == 1:
+        std = std.view(1, -1, 1, 1)
+    if list(mean.shape) != [1, int(expected_channels), 1, 1]:
+        raise ValueError(f"pre-decode stats mean shape must be [1,{expected_channels},1,1], got {list(mean.shape)}")
+    if list(std.shape) != [1, int(expected_channels), 1, 1]:
+        raise ValueError(f"pre-decode stats std shape must be [1,{expected_channels},1,1], got {list(std.shape)}")
+    return {
+        "path": str(path),
+        "mean": mean,
+        "std": std,
+        "num_samples": int(stats["num_samples"]) if "num_samples" in stats else None,
+        "created_at_utc": stats.get("created_at_utc"),
+        "mean_summary": vector_summary(mean),
+        "std_summary": vector_summary(std),
+    }
+
+
+def apply_pre_decode_transform_cpu(
+    z_cpu: torch.Tensor,
+    *,
+    pre_decode_scale: float,
+    pre_decode_shift: float,
+    pre_decode_channel_stats: Optional[Dict[str, Any]],
+) -> torch.Tensor:
+    y = z_cpu.float()
+    if pre_decode_scale != 1.0 or pre_decode_shift != 0.0:
+        y = y.mul(float(pre_decode_scale)).add(float(pre_decode_shift))
+    if pre_decode_channel_stats is not None:
+        y = y * pre_decode_channel_stats["std"] + pre_decode_channel_stats["mean"]
+    return y
+
+
+def compute_pre_decode_latent_stats(
+    z_cpu: torch.Tensor,
+    latent_meta: Dict[str, Any],
+    *,
+    pre_decode_scale: float,
+    pre_decode_shift: float,
+    pre_decode_channel_stats: Optional[Dict[str, Any]],
+    chunk_size: int = 64,
+) -> Dict[str, Any]:
+    """Compute exact global stats after scalar and optional per-channel inverse."""
+    sample_stats = affine_latent_stats(latent_meta, scale=1.0, shift=0.0)
+    count = 0
+    sum_ = 0.0
+    sumsq = 0.0
+    min_ = float("inf")
+    max_ = float("-inf")
+    for s in range(0, int(z_cpu.shape[0]), int(chunk_size)):
+        e = min(int(z_cpu.shape[0]), s + int(chunk_size))
+        y = apply_pre_decode_transform_cpu(
+            z_cpu[s:e],
+            pre_decode_scale=pre_decode_scale,
+            pre_decode_shift=pre_decode_shift,
+            pre_decode_channel_stats=pre_decode_channel_stats,
+        ).double()
+        count += int(y.numel())
+        sum_ += float(y.sum().item())
+        sumsq += float((y * y).sum().item())
+        min_ = min(min_, float(y.min().item()))
+        max_ = max(max_, float(y.max().item()))
+        del y
+    if count <= 0:
+        raise RuntimeError("cannot compute pre-decode stats for empty latent tensor")
+    decode_mean = sum_ / count
+    decode_var = max(0.0, sumsq / count - decode_mean * decode_mean)
+    decode_std = float(decode_var**0.5)
+    decode_rms = float(max(0.0, sumsq / count) ** 0.5)
+    ref = FLUX_IMAGENET256_RAW_REFERENCE_STATS
+    ref_std = float(ref["reference_raw_flux_std"])
+    ref_rms = float(ref["reference_raw_flux_rms"])
+    out: Dict[str, Any] = {
+        "sample_space_mean": sample_stats["sample_space_mean"],
+        "sample_space_std": sample_stats["sample_space_std"],
+        "sample_space_rms": sample_stats["sample_space_rms"],
+        "sample_space_min": sample_stats["sample_space_min"],
+        "sample_space_max": sample_stats["sample_space_max"],
+        "sample_space_absmax": sample_stats["sample_space_absmax"],
+        "pre_decode_scale": float(pre_decode_scale),
+        "pre_decode_shift": float(pre_decode_shift),
+        "pre_decode_channel_stats_path": pre_decode_channel_stats["path"] if pre_decode_channel_stats else "",
+        "pre_decode_channel_stats_num_samples": pre_decode_channel_stats.get("num_samples") if pre_decode_channel_stats else None,
+        "pre_decode_channel_stats_created_at_utc": pre_decode_channel_stats.get("created_at_utc") if pre_decode_channel_stats else None,
+        "pre_decode_channel_mean_summary": pre_decode_channel_stats.get("mean_summary") if pre_decode_channel_stats else None,
+        "pre_decode_channel_std_summary": pre_decode_channel_stats.get("std_summary") if pre_decode_channel_stats else None,
+        "decode_space_mean": float(decode_mean),
+        "decode_space_std": decode_std,
+        "decode_space_rms": decode_rms,
+        "decode_space_min": float(min_),
+        "decode_space_max": float(max_),
+        "decode_space_absmax": float(max(abs(min_), abs(max_))),
+        **ref,
+        "reference_raw_flux_stats_source": "compute_latent_cache_stats.py linspace32 shards / 130191 ImageNet-256 train latents",
+        "sample_space_std_over_reference_raw_flux_std": sample_stats["sample_space_std"] / ref_std if ref_std else None,
+        "decode_space_std_over_reference_raw_flux_std": decode_std / ref_std if ref_std else None,
+        "sample_space_rms_over_reference_raw_flux_rms": sample_stats["sample_space_rms"] / ref_rms if ref_rms else None,
+        "decode_space_rms_over_reference_raw_flux_rms": decode_rms / ref_rms if ref_rms else None,
+    }
+    return out
+
+
 def decode_batch(
     vae: torch.nn.Module,
     z_cpu: torch.Tensor,
@@ -236,11 +371,20 @@ def decode_batch(
     model_dtype: torch.dtype,
     pre_decode_scale: float,
     pre_decode_shift: float,
+    pre_decode_channel_stats: Optional[Dict[str, Any]],
 ) -> torch.Tensor:
-    z = z_cpu.to(device=device, dtype=model_dtype, non_blocking=True)
     # Default is identity: cache/trainer latents are raw VAE posterior latents.
-    if pre_decode_scale != 1.0 or pre_decode_shift != 0.0:
-        z = z.float().mul(float(pre_decode_scale)).add(float(pre_decode_shift)).to(dtype=model_dtype)
+    if pre_decode_channel_stats is None and pre_decode_scale == 1.0 and pre_decode_shift == 0.0:
+        z = z_cpu.to(device=device, dtype=model_dtype, non_blocking=True)
+    else:
+        z = z_cpu.to(device=device, dtype=torch.float32, non_blocking=True)
+        if pre_decode_scale != 1.0 or pre_decode_shift != 0.0:
+            z = z.mul(float(pre_decode_scale)).add(float(pre_decode_shift))
+        if pre_decode_channel_stats is not None:
+            mean = pre_decode_channel_stats["mean"].to(device=device, dtype=torch.float32, non_blocking=True)
+            std = pre_decode_channel_stats["std"].to(device=device, dtype=torch.float32, non_blocking=True)
+            z = z * std + mean
+        z = z.to(dtype=model_dtype)
     with torch.inference_mode():
         out = vae.decode(z)
         x = out.sample if hasattr(out, "sample") else out[0]
@@ -332,10 +476,17 @@ def decode_latent_file(args: argparse.Namespace) -> Dict[str, Any]:
         max_images=args.max_images,
         start_index=args.start_index,
     )
-    latent_space_stats = affine_latent_stats(
+    channels = int(z_all.shape[1])
+    pre_decode_channel_stats = load_pre_decode_channel_stats(
+        str(getattr(args, "pre_decode_stats_path", "") or ""),
+        expected_channels=channels,
+    )
+    latent_space_stats = compute_pre_decode_latent_stats(
+        z_all,
         latent_meta,
-        scale=float(args.pre_decode_scale),
-        shift=float(args.pre_decode_shift),
+        pre_decode_scale=float(args.pre_decode_scale),
+        pre_decode_shift=float(args.pre_decode_shift),
+        pre_decode_channel_stats=pre_decode_channel_stats,
     )
     vae, diffusers_version, vae_meta = load_vae(args, device)
 
@@ -361,6 +512,7 @@ def decode_latent_file(args: argparse.Namespace) -> Dict[str, Any]:
             model_dtype=model_dtype,
             pre_decode_scale=float(args.pre_decode_scale),
             pre_decode_shift=float(args.pre_decode_shift),
+            pre_decode_channel_stats=pre_decode_channel_stats,
         )
         decoded_float_stats.append(
             {
@@ -405,6 +557,7 @@ def decode_latent_file(args: argparse.Namespace) -> Dict[str, Any]:
         "output_range": args.output_range,
         "pre_decode_scale": float(args.pre_decode_scale),
         "pre_decode_shift": float(args.pre_decode_shift),
+        "pre_decode_stats_path": str(getattr(args, "pre_decode_stats_path", "") or ""),
         **latent_space_stats,
         "latent_space_stats": latent_space_stats,
         "latent_meta": latent_meta,
@@ -445,6 +598,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output-range", default="minus1_1", choices=["minus1_1", "zero1", "auto"])
     p.add_argument("--pre-decode-scale", type=float, default=1.0, help="identity by default; cache/trainer latents are raw VAE latents")
     p.add_argument("--pre-decode-shift", type=float, default=0.0, help="identity by default; cache/trainer latents are raw VAE latents")
+    p.add_argument(
+        "--pre-decode-stats-path",
+        default="",
+        help=(
+            "optional trainer stats .pt with mean/std [1,C,1,1] for per-channel inverse decode; "
+            "applies z_raw=(z*pre_decode_scale+pre_decode_shift)*std+mean"
+        ),
+    )
     p.add_argument("--save-grid", action="store_true")
     p.add_argument("--manifest-mode", default="full", choices=["full", "first_last", "none"], help="decode_summary image manifest policy; use first_last/none for large evals")
     p.add_argument("--preview-max-images", type=int, default=16)

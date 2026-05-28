@@ -146,6 +146,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--fid-timeout-sec", type=int, default=3600)
     p.add_argument("--pre-decode-scale", type=float, default=1.0, help="scalar inverse scale applied to sampled trainer latents before FLUX VAE decode")
     p.add_argument("--pre-decode-shift", type=float, default=0.0, help="scalar inverse shift applied after pre-decode-scale before FLUX VAE decode")
+    p.add_argument("--pre-decode-stats-path", default="", help="optional trainer stats .pt for per-channel inverse decode")
     p.add_argument("--save-grid", action="store_true")
     p.add_argument("--decode-manifest-mode", default="first_last", choices=["full", "first_last", "none"], help="manifest policy forwarded to decode_summary; first_last avoids huge JSON for large evals")
     return p
@@ -168,6 +169,7 @@ def main() -> int:
         "images_dir": str(images_dir),
         "pre_decode_scale": float(args.pre_decode_scale),
         "pre_decode_shift": float(args.pre_decode_shift),
+        "pre_decode_stats_path": str(args.pre_decode_stats_path or ""),
     }
     try:
         decode_args = argparse.Namespace(
@@ -187,6 +189,7 @@ def main() -> int:
             output_range="minus1_1",
             pre_decode_scale=float(args.pre_decode_scale),
             pre_decode_shift=float(args.pre_decode_shift),
+            pre_decode_stats_path=str(args.pre_decode_stats_path or ""),
             save_grid=bool(args.save_grid),
             manifest_mode=args.decode_manifest_mode,
             preview_max_images=16,
@@ -207,6 +210,12 @@ def main() -> int:
                 "decode_manifest_omitted": summary.get("images_manifest_omitted"),
                 "decode_pre_decode_scale": summary.get("pre_decode_scale"),
                 "decode_pre_decode_shift": summary.get("pre_decode_shift"),
+                "decode_pre_decode_stats_path": summary.get("pre_decode_stats_path"),
+                "pre_decode_channel_stats_path": summary.get("pre_decode_channel_stats_path"),
+                "pre_decode_channel_stats_num_samples": summary.get("pre_decode_channel_stats_num_samples"),
+                "pre_decode_channel_stats_created_at_utc": summary.get("pre_decode_channel_stats_created_at_utc"),
+                "pre_decode_channel_mean_summary": summary.get("pre_decode_channel_mean_summary"),
+                "pre_decode_channel_std_summary": summary.get("pre_decode_channel_std_summary"),
                 "sample_space_mean": summary.get("sample_space_mean"),
                 "sample_space_std": summary.get("sample_space_std"),
                 "sample_space_rms": summary.get("sample_space_rms"),

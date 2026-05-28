@@ -824,3 +824,56 @@ Same step-1000 samples, 1024-image real ImageNet-256 FID/MMD:
 | adaptive ref-std match | `1.097240` | `1.714043` | `354.0362` | `0.421643` | `421.643` |
 
 Conclusion: adaptive std matching confirms the official inverse scale was too large for early generated samples and recovers a large part of the FID loss, but scalar calibration alone is not sufficient. Next FLUX route should test per-channel normalization/inverse decode or explicit sampler/noise scale policy before any long training.
+
+<!-- FLUX2_CHANNELNORM_B3_SMOKE_20260528 -->
+
+## Update — FLUX per-channel latent_norm B3 smoke completed
+
+更新时间：`2026-05-28T17:15Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_CHANNELNORM_B3_SMOKE_2026-05-28.md
+```
+
+What changed:
+
+- Added decoder support for trainer stats based per-channel inverse decode:
+  `z_raw = (z_sample * pre_decode_scale + pre_decode_shift) * channel_std + channel_mean`.
+- Added `eval_flux2vae_imagespace.py --pre-decode-stats-path` forwarding.
+- Added B3-medium h512/d12 b128 1k config using:
+  `data.latent_norm=true`, `latent_multiplier=1.0`, and the FLUX channel stats file from `130,191` ImageNet-256 train latents.
+
+Mechanical result: **PASS**.
+
+| check | result |
+|---|---:|
+| final step | `1000` |
+| final loss | `1.240308` |
+| practical gate | `true` |
+| live-param fp32 JVP target | `true` |
+| EMA used for JVP target | `false` |
+| mean realized r=t fraction | `0.7491875` |
+| r=t degenerate target-v max | `0.0` |
+| final FD rel err | `4.07025e-4` |
+| loop peak memory | `16.76 GB` |
+
+Image-space result with official per-channel inverse decode:
+
+| step | normalized sample std | raw decode-space std | decode/ref std ratio | FID ↓ | MMD2/KID ↓ |
+|---:|---:|---:|---:|---:|---:|
+| 500 | `1.583158` | `2.716459` | `1.584825` | `370.2665` | `0.464136` |
+| 1000 | `1.562104` | `2.680442` | `1.563813` | `372.7879` | `0.469827` |
+
+Five-way 1k comparison:
+
+| variant | decode-space std | FID ↓ | MMD2/KID ↓ |
+|---|---:|---:|---:|
+| raw FLUX baseline | n/a | `348.3859` | `0.406783` |
+| scalar normalized + official inverse | `2.677575` | `391.8537` | `0.514579` |
+| scalar normalized + identity eval ablation | `1.562140` | `345.6951` | `0.399690` |
+| scalar normalized + adaptive ref-std eval | `1.714043` | `354.0362` | `0.421643` |
+| per-channel latent_norm + official inverse | `2.680442` | `372.7879` | `0.469827` |
+
+Interpretation: per-channel latent_norm is mechanically correct and slightly better than scalar official inverse, but it does not fix the FLUX smoke quality issue. The generated normalized latent std is still `~1.56`; after the correct inverse it becomes raw std `~2.68`, above the real FLUX raw std `~1.714`. This points to sampler/output-scale/training-retune issues rather than VAE reconstruction failure.
