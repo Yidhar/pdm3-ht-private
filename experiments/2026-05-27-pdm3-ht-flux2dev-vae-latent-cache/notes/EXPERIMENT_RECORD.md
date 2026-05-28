@@ -564,3 +564,121 @@ Practical next diagnostics for the FLUX route:
 2. Latent statistics and scaling/normalization check for FLUX.2 latents (`mean/std`, channel stats, possible latent multiplier) before longer B3 runs.
 3. If continuing class-conditional ImageNet on FLUX.2, retune LR, model size, sampler steps, latent normalization, and possibly patchification; do not reuse PAE hyperparameters blindly.
 4. For paper story, phrase this as VAE-backend stress/ablation, not as proof that FLUX.2 VAE is weak.
+
+## 2026-05-28 — FLUX.2 VAE reconstruction-ceiling diagnostic on real ImageNet-256 crops
+
+Purpose: diagnose whether the bad FLUX B3-medium ImageNet-256 short-run FID (`~350 -> 421` over 1k..5k) is caused primarily by the FLUX.2 VAE reconstruction/domain ceiling, or by the MeanFlow/HT/B3 training configuration in FLUX latent space.
+
+Diagnostic definition:
+
+```text
+real ADM-cropped ImageNet-256 uint8 image
+  -> AutoencoderKLFlux2 encode, posterior.mode(), raw latent convention
+  -> AutoencoderKLFlux2 decode
+  -> reconstructed PNG
+  -> Inception FID/MMD/KID against real ImageNet-256 reference stats
+```
+
+New script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/diagnose_flux2vae_reconstruction.py
+```
+
+Main run:
+
+```bash
+EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+python3 "$EXP/scripts/diagnose_flux2vae_reconstruction.py" \
+  --crop-cache-dir /workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors \
+  --output-dir "$EXP/results/flux2vae_reconstruction_diagnostic_1024_fp32_strict" \
+  --repo-id diffusers/FLUX.2-dev-bnb-4bit \
+  --subfolder vae \
+  --vae-class AutoencoderKLFlux2 \
+  --local-files-only \
+  --max-images 1024 \
+  --batch-size 32 \
+  --device cuda:0 \
+  --model-dtype fp32 \
+  --ref-stats /workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_stats.npz \
+  --ref-features /workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_mmd8192_features.npz \
+  --fid-batch-size 64 \
+  --fid-num-workers 2 \
+  --mmd-max-ref 8192
+```
+
+Local-only outputs:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_reconstruction_diagnostic_1024_fp32_strict/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/054_flux2vae_reconstruction_diag_1024_fp32_strict_20260528T115802Z.log
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/055_imagenet_real1024_baseline_fid_mmd_20260528T120341Z.log
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/056_flux2vae_recon_vs_input1024_paired_feature_diag_20260528T120424Z.log
+```
+
+These are ignored runtime artifacts and should not be committed/uploaded by default.
+
+### Results
+
+All metrics below use `1024` first ImageNet train crops unless otherwise noted. The real full-reference stats are the existing `1,281,167`-image ImageNet-256 ADM-crop Inception-2048 stats with `8192` real feature-bank samples for KID/MMD.
+
+| comparison | FID ↓ | MMD2/KID ↓ | KID x1000 ↓ | images | note |
+|---|---:|---:|---:|---:|---|
+| FLUX.2 recon vs full real ref | `44.3251` | `1.83545e-05` | `0.01835` | 1024 | encode/decode reconstruction ceiling |
+| Real first-1024 inputs vs full real ref | `44.4002` | `-8.34277e-06` | `-0.00834` | 1024 | finite-sample baseline |
+| FLUX.2 recon vs same first-1024 inputs | `2.7447` | `-6.12531e-04` | `-0.61253` | 1024 | paired distribution drift |
+
+Pixel reconstruction metrics:
+
+| metric | value |
+|---|---:|
+| MSE `[0,1]` | `8.338014e-04` |
+| RMSE `[0,1]` | `0.0288756` |
+| MAE `[0,1]` | `0.0167331` |
+| global PSNR | `30.7894 dB` |
+| mean per-image PSNR | `33.0736 dB` |
+| median per-image PSNR | `32.9017 dB` |
+| max abs uint8 error | `227` |
+
+Latent / decode stats:
+
+| item | value |
+|---|---:|
+| latent shape | `[B, 32, 32, 32]` |
+| latent mean | `-0.00627987` |
+| latent std | `1.72098` |
+| latent min / max | `-13.3578 / 12.2725` |
+| latent RMS | `1.72099` |
+| decoded float min / max before uint8 | `-2.1255 / 1.7374` |
+| encode+decode throughput | `25.77 images/sec` |
+| total wall time | `289.64 sec` |
+| CUDA peak | `12.44 GB` |
+
+Additional paired feature drift:
+
+```json
+{
+  "paired_feature_cosine_mean": 0.991840691139065,
+  "paired_feature_l2_mean": 2.167182747933199
+}
+```
+
+### Interpretation
+
+This diagnostic **does not support** the hypothesis that FLUX.2 VAE reconstruction quality is the main cause of the current B3-medium FLUX ImageNet-256 FID `~350-421` short-run behavior.
+
+Reason: FLUX.2 reconstruction FID against the full real reference (`44.3251`) is essentially equal to the real first-1024 finite-sample baseline (`44.4002`). Against the same first-1024 inputs, reconstruction drift is much smaller (`FID 2.7447`, feature cosine mean `0.99184`). Therefore, at least for deterministic `posterior.mode()` reconstruction of ADM-cropped ImageNet-256 images, FLUX.2 VAE can represent the images well enough that the immediate bottleneck is more likely one of:
+
+1. FLUX latent scale/normalization mismatch relative to PAE hyperparameters (`std ~= 1.72`, `[32,32,32]` spatial grid).
+2. B3/MeanFlow training configuration not retuned for FLUX latents.
+3. Model capacity / patchification / LR / sampler-step mismatch for `[32,32,32]` latents.
+4. Short-run class-conditional ImageNet prior learning difficulty, not VAE reconstruction ceiling.
+
+Guardrail: this is a `1024`-sample diagnostic, not official 50k FID. It clears the immediate reconstruction-ceiling concern but does not prove the FLUX route is fully tuned. FLUX/Qwen should remain modern VAE/T2I baselines; do not overstate VAE-agnostic claims until backend-specific training is retuned and compared honestly.
+
+Practical next steps for FLUX route:
+
+1. Add latent normalization/standardization experiment for FLUX B3 instead of reusing PAE-scale assumptions.
+2. Run a short B3 smoke with normalized FLUX latents and compare loss/FID trend to the existing unnormalized 1k/5k runs.
+3. If needed, run the same reconstruction-ceiling diagnostic for PAE and later Qwen VAE for side-by-side backend reporting.
+4. Treat FLUX ImageNet-256 as a backend stress/ablation; keep stronger FLUX/Qwen relevance for later T2I/general-image experiments.

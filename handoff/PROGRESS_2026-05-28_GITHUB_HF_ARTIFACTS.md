@@ -663,3 +663,43 @@ step 30000: checkpoint + EMA sample + CPU PAE decode + 64/64 Inception FID/MMD/K
 ```
 
 Caveat: these are still early small-sample `64 generated / 64 real` convergence diagnostics, not official 50k FID. Use them for same-run trend monitoring and pipeline validation.
+
+<!-- FLUX2_VAE_RECON_DIAGNOSTIC_20260528T1205Z -->
+
+## FLUX.2 VAE reconstruction diagnostic completed
+
+更新时间：`2026-05-28T12:05Z`
+
+A FLUX.2 VAE reconstruction-ceiling diagnostic was run before continuing the FLUX-latent B3 route.
+
+New script:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/diagnose_flux2vae_reconstruction.py
+```
+
+Local output, intentionally ignored by Git:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_reconstruction_diagnostic_1024_fp32_strict/
+```
+
+Key result table:
+
+| comparison | FID ↓ | MMD2/KID ↓ | KID x1000 ↓ | images |
+|---|---:|---:|---:|---:|
+| FLUX.2 recon vs full real ref | `44.3251` | `1.83545e-05` | `0.01835` | 1024 |
+| Real first-1024 vs full real ref | `44.4002` | `-8.34277e-06` | `-0.00834` | 1024 |
+| FLUX.2 recon vs same first-1024 inputs | `2.7447` | `-6.12531e-04` | `-0.61253` | 1024 |
+
+Conclusion:
+
+- FLUX.2 VAE reconstruction is good enough on these ImageNet-256 ADM crops that it does not explain the current B3-medium `FID ~350-421` short-run behavior.
+- Next FLUX route work should focus on latent normalization / scale and B3 hyperparameter retuning for `[32,32,32]` latents, not on blaming the VAE reconstruction ceiling.
+- Continue to frame FLUX/Qwen as modern VAE/T2I baselines; ImageNet-256 PAE may still be stronger because it is tuned for that domain.
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_VAE_RECON_DIAGNOSTIC_2026-05-28.md
+```

@@ -193,3 +193,54 @@ experiments/**/scripts/*.sh
 experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/notes/EXPERIMENT_RECORD.md
 handoff/FLUX2_VAE_ROUTE_SUMMARY_2026-05-28.md
 ```
+
+## 8. Reconstruction-ceiling diagnostic completed — 2026-05-28
+
+A FLUX.2 VAE reconstruction diagnostic was completed after the B3-medium 5k run worsened in image-space FID.
+
+New script:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/diagnose_flux2vae_reconstruction.py
+```
+
+Main local result directory, not for Git upload:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_reconstruction_diagnostic_1024_fp32_strict/
+```
+
+Key 1024-sample metrics:
+
+| comparison | FID ↓ | MMD2/KID ↓ | KID x1000 ↓ |
+|---|---:|---:|---:|
+| FLUX.2 recon vs full ImageNet-256 ref | `44.3251` | `1.83545e-05` | `0.01835` |
+| Real first-1024 vs full ImageNet-256 ref | `44.4002` | `-8.34277e-06` | `-0.00834` |
+| FLUX.2 recon vs same first-1024 inputs | `2.7447` | `-6.12531e-04` | `-0.61253` |
+
+Latent and pixel summary:
+
+```json
+{
+  "latent_shape": "[B, 32, 32, 32]",
+  "latent_mean": -0.0062798662546468265,
+  "latent_std": 1.7209782867032213,
+  "pixel_mse_0_1": 0.0008338014284686945,
+  "global_psnr_db": 30.789373651757323,
+  "mean_image_psnr_db": 33.073608754982615,
+  "paired_feature_cosine_mean": 0.991840691139065
+}
+```
+
+Interpretation update:
+
+- The bad current FLUX B3-medium ImageNet-256 FID trend is **not primarily explained by FLUX.2 VAE reconstruction failure**.
+- Reconstruction-vs-full-reference FID is effectively equal to the real first-1024 finite-sample baseline.
+- The likely bottleneck is FLUX latent modeling/training: normalization/scale, LR/model/sampler retune, patchification, or short-run prior learning.
+- Keep FLUX/Qwen as modern VAE/T2I baselines; do not treat the current ImageNet class-conditional FLUX B3 run as a final negative verdict.
+
+Detailed handoff:
+
+```text
+handoff/FLUX2_VAE_RECON_DIAGNOSTIC_2026-05-28.md
+```
