@@ -846,3 +846,43 @@ Conclusion:
 - Do not yet conclude scalar normalization is bad either; this is a sample/decode scale-calibration issue at 1k.
 - Before longer FLUX training, add a scale-calibrated eval diagnostic: log raw-decode-space stats and compare identity decode / official inverse decode / adaptive ref-std decode / per-channel inverse normalization.
 
+
+<!-- FLUX2_SCALE_CALIBRATED_EVAL_20260528 -->
+
+## Update — FLUX scale-calibrated eval diagnostic
+
+更新时间：`2026-05-28T13:22Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_SCALE_CALIBRATED_EVAL_2026-05-28.md
+```
+
+Small code update only; runtime outputs remain local/ignored.
+
+Updated scripts:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/decode_flux2vae_latents.py
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/eval_flux2vae_imagespace.py
+```
+
+New eval/decode records log:
+
+```text
+sample_space_mean/std/rms/absmax
+decode_space_mean/std/rms/absmax
+reference_raw_flux_mean/std/rms
+std/rms ratios against reference raw FLUX cache
+```
+
+Scale-aware step-1000 eval-only comparison:
+
+| decode variant | pre-decode scale | decode-space std | FID ↓ | MMD2/KID ↓ |
+|---|---:|---:|---:|---:|
+| official inverse | `1.714043` | `2.677575` | `391.8537` | `0.514579` |
+| identity ablation | `1.0` | `1.562140` | `345.6951` | `0.399690` |
+| adaptive ref-std match | `1.097240` | `1.714043` | `354.0362` | `0.421643` |
+
+Decision: do not launch longer scalar-normalized FLUX training yet. Next FLUX engineering target is per-channel latent normalization/inverse decode or explicit FLUX sampler/noise scale policy.

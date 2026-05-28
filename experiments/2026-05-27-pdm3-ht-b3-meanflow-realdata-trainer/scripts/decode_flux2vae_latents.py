@@ -32,6 +32,15 @@ import torch
 from PIL import Image
 from safetensors import safe_open
 
+FLUX_IMAGENET256_RAW_REFERENCE_STATS: Dict[str, float] = {
+    # Measured on the completed FLUX.2 ImageNet-256 latent cache with
+    # compute_latent_cache_stats.py, linspace 32 shards / 130,191 latents.
+    # These are diagnostic references only; they are not used to modify decode.
+    "reference_raw_flux_mean": -0.009054178792269978,
+    "reference_raw_flux_std": 1.7140430386576422,
+    "reference_raw_flux_rms": 1.7140669521708671,
+}
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -146,6 +155,10 @@ def read_latent_file(
         "latent_dtype": str(z.dtype),
         "latent_mean": float(z.float().mean().item()),
         "latent_std": float(z.float().std(unbiased=False).item()),
+        "latent_rms": float(z.float().square().mean().sqrt().item()),
+        "latent_min": float(z.float().min().item()),
+        "latent_max": float(z.float().max().item()),
+        "latent_absmax": float(z.float().abs().max().item()),
         "has_labels": labels is not None,
     }
     if labels is not None and labels.numel() > 0:
@@ -157,6 +170,62 @@ def read_latent_file(
             }
         )
     return z, labels, meta
+
+
+def affine_latent_stats(latent_meta: Dict[str, Any], *, scale: float, shift: float) -> Dict[str, Any]:
+    """Return sample-space and pre-decode affine-space latent diagnostics.
+
+    The B3 trainer writes sampled tensors in its training/sampler space.  The
+    FLUX decoder may then apply an affine scalar transform
+    ``z_decode = z_sample * scale + shift``.  Keeping both spaces explicit makes
+    scale-policy mistakes visible in eval records.
+    """
+    sample_mean = float(latent_meta["latent_mean"])
+    sample_std = float(latent_meta["latent_std"])
+    sample_rms = float(latent_meta["latent_rms"])
+    sample_min = float(latent_meta["latent_min"])
+    sample_max = float(latent_meta["latent_max"])
+    sample_absmax = float(latent_meta["latent_absmax"])
+
+    scale = float(scale)
+    shift = float(shift)
+    decode_mean = sample_mean * scale + shift
+    decode_std = sample_std * abs(scale)
+    # E[(aX+b)^2] = a^2 E[X^2] + 2ab E[X] + b^2
+    decode_rms2 = (scale * scale) * (sample_rms * sample_rms) + 2.0 * scale * shift * sample_mean + shift * shift
+    decode_rms = float(max(decode_rms2, 0.0) ** 0.5)
+    y0 = sample_min * scale + shift
+    y1 = sample_max * scale + shift
+    decode_min = float(min(y0, y1))
+    decode_max = float(max(y0, y1))
+    decode_absmax = float(max(abs(decode_min), abs(decode_max)))
+
+    ref = FLUX_IMAGENET256_RAW_REFERENCE_STATS
+    ref_std = float(ref["reference_raw_flux_std"])
+    ref_rms = float(ref["reference_raw_flux_rms"])
+    out: Dict[str, Any] = {
+        "sample_space_mean": sample_mean,
+        "sample_space_std": sample_std,
+        "sample_space_rms": sample_rms,
+        "sample_space_min": sample_min,
+        "sample_space_max": sample_max,
+        "sample_space_absmax": sample_absmax,
+        "pre_decode_scale": scale,
+        "pre_decode_shift": shift,
+        "decode_space_mean": decode_mean,
+        "decode_space_std": decode_std,
+        "decode_space_rms": decode_rms,
+        "decode_space_min": decode_min,
+        "decode_space_max": decode_max,
+        "decode_space_absmax": decode_absmax,
+        **ref,
+        "reference_raw_flux_stats_source": "compute_latent_cache_stats.py linspace32 shards / 130191 ImageNet-256 train latents",
+        "sample_space_std_over_reference_raw_flux_std": sample_std / ref_std if ref_std else None,
+        "decode_space_std_over_reference_raw_flux_std": decode_std / ref_std if ref_std else None,
+        "sample_space_rms_over_reference_raw_flux_rms": sample_rms / ref_rms if ref_rms else None,
+        "decode_space_rms_over_reference_raw_flux_rms": decode_rms / ref_rms if ref_rms else None,
+    }
+    return out
 
 
 def decode_batch(
@@ -263,6 +332,11 @@ def decode_latent_file(args: argparse.Namespace) -> Dict[str, Any]:
         max_images=args.max_images,
         start_index=args.start_index,
     )
+    latent_space_stats = affine_latent_stats(
+        latent_meta,
+        scale=float(args.pre_decode_scale),
+        shift=float(args.pre_decode_shift),
+    )
     vae, diffusers_version, vae_meta = load_vae(args, device)
 
     manifest_mode = str(getattr(args, "manifest_mode", "full")).strip().lower()
@@ -331,6 +405,8 @@ def decode_latent_file(args: argparse.Namespace) -> Dict[str, Any]:
         "output_range": args.output_range,
         "pre_decode_scale": float(args.pre_decode_scale),
         "pre_decode_shift": float(args.pre_decode_shift),
+        **latent_space_stats,
+        "latent_space_stats": latent_space_stats,
         "latent_meta": latent_meta,
         "vae_meta": vae_meta,
         "decoded_float_stats": decoded_float_stats,

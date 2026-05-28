@@ -207,6 +207,21 @@ def main() -> int:
                 "decode_manifest_omitted": summary.get("images_manifest_omitted"),
                 "decode_pre_decode_scale": summary.get("pre_decode_scale"),
                 "decode_pre_decode_shift": summary.get("pre_decode_shift"),
+                "sample_space_mean": summary.get("sample_space_mean"),
+                "sample_space_std": summary.get("sample_space_std"),
+                "sample_space_rms": summary.get("sample_space_rms"),
+                "sample_space_absmax": summary.get("sample_space_absmax"),
+                "decode_space_mean": summary.get("decode_space_mean"),
+                "decode_space_std": summary.get("decode_space_std"),
+                "decode_space_rms": summary.get("decode_space_rms"),
+                "decode_space_absmax": summary.get("decode_space_absmax"),
+                "reference_raw_flux_mean": summary.get("reference_raw_flux_mean"),
+                "reference_raw_flux_std": summary.get("reference_raw_flux_std"),
+                "reference_raw_flux_rms": summary.get("reference_raw_flux_rms"),
+                "sample_space_std_over_reference_raw_flux_std": summary.get("sample_space_std_over_reference_raw_flux_std"),
+                "decode_space_std_over_reference_raw_flux_std": summary.get("decode_space_std_over_reference_raw_flux_std"),
+                "sample_space_rms_over_reference_raw_flux_rms": summary.get("sample_space_rms_over_reference_raw_flux_rms"),
+                "decode_space_rms_over_reference_raw_flux_rms": summary.get("decode_space_rms_over_reference_raw_flux_rms"),
             }
         )
         record.update(

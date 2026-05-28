@@ -299,3 +299,37 @@ Before launching longer FLUX training, implement and run a **scale-calibrated ev
    - or raw FLUX latents with explicit endpoint/sampler noise scale.
 
 For paper framing: keep this as a backend/scale-policy stress result. It supports the claim that FLUX/Qwen-style modern VAEs are viable baselines, but backend-specific latent scale and sampler calibration must be handled explicitly.
+
+---
+
+## Update — adaptive ref-std decode diagnostic completed
+
+更新时间：`2026-05-28T13:22Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_SCALE_CALIBRATED_EVAL_2026-05-28.md
+```
+
+After the initial scale-aware smoke, an eval-only adaptive scale diagnostic was run on the same step-1000 samples. The decode scale was chosen to match generated decode-space std to the measured real FLUX raw latent std:
+
+```text
+sample_space_std = 1.5621399879455566
+reference_raw_flux_std = 1.7140430386576422
+adaptive_scale = 1.7140430386576422 / 1.5621399879455566 = 1.0972403573842702
+```
+
+Same samples, 1024-image real ImageNet-256 FID/MMD protocol:
+
+| decode variant | pre-decode scale | decode-space std | FID ↓ | MMD2/KID ↓ | KID x1000 ↓ |
+|---|---:|---:|---:|---:|---:|
+| official inverse scale | `1.714043` | `2.677575` | `391.8537` | `0.514579` | `514.579` |
+| identity ablation | `1.0` | `1.562140` | `345.6951` | `0.399690` | `399.690` |
+| adaptive ref-std match | `1.097240` | `1.714043` | `354.0362` | `0.421643` | `421.643` |
+
+Interpretation update:
+
+- Matching std fixes the official inverse-scale over-amplification and improves FID by `~37.8` versus official inverse scale.
+- It still does not beat identity decode or the raw-FLUX short baseline.
+- Therefore scalar normalization is not enough evidence to launch a long FLUX run; next should be per-channel latent normalization plus inverse per-channel decode, or an explicit FLUX noise/sampler scale policy.

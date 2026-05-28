@@ -776,3 +776,51 @@ Conclusion:
 - Do not conclude “FLUX VAE bad.” Reconstruction diagnostic is still healthy.
 - Do not yet conclude scalar normalization is bad either; this is a sample/decode scale-calibration issue at 1k.
 - Before longer FLUX training, add a scale-calibrated eval diagnostic: log raw-decode-space stats and compare identity decode / official inverse decode / adaptive ref-std decode / per-channel inverse normalization.
+
+---
+
+## 2026-05-28 — FLUX scale-calibrated eval diagnostic
+
+Detailed handoff:
+
+```text
+handoff/FLUX2_SCALE_CALIBRATED_EVAL_2026-05-28.md
+```
+
+Purpose: before launching a longer scalar-normalized FLUX B3 run, check whether the poor official inverse-scale metric is mainly caused by decode amplitude overshoot.
+
+Code updated:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/decode_flux2vae_latents.py
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/eval_flux2vae_imagespace.py
+```
+
+New eval/decode records now include sample-space and decode-space latent stats, plus reference raw FLUX stats.
+
+Adaptive eval run:
+
+```text
+base samples: experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/smoke_flux2vae_b3medium_h512_d12_b128_1k_scaleaware_1024img/eval/step_00001000/sample_latents.safetensors
+output:       .../eval/step_00001000_refstd_decode_ablate/
+log:          experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/058_flux2vae_scaleaware_step1000_refstd_decode_ablate_20260528T131922Z.log
+```
+
+Scale derivation:
+
+| item | value |
+|---|---:|
+| generated sample-space std | `1.5621399879455566` |
+| target real FLUX raw std | `1.7140430386576422` |
+| adaptive pre-decode scale | `1.0972403573842702` |
+| resulting decode-space std | `1.714043038657642` |
+
+Same step-1000 samples, 1024-image real ImageNet-256 FID/MMD:
+
+| decode variant | pre-decode scale | decode-space std | FID ↓ | MMD2/KID ↓ | KID x1000 ↓ |
+|---|---:|---:|---:|---:|---:|
+| official inverse scale | `1.714043` | `2.677575` | `391.8537` | `0.514579` | `514.579` |
+| identity ablation | `1.0` | `1.562140` | `345.6951` | `0.399690` | `399.690` |
+| adaptive ref-std match | `1.097240` | `1.714043` | `354.0362` | `0.421643` | `421.643` |
+
+Conclusion: adaptive std matching confirms the official inverse scale was too large for early generated samples and recovers a large part of the FID loss, but scalar calibration alone is not sufficient. Next FLUX route should test per-channel normalization/inverse decode or explicit sampler/noise scale policy before any long training.

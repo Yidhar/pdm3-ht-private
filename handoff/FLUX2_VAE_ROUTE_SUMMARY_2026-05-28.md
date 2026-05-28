@@ -326,3 +326,25 @@ Conclusion:
 - Do not conclude “FLUX VAE bad.” Reconstruction diagnostic is still healthy.
 - Do not yet conclude scalar normalization is bad either; this is a sample/decode scale-calibration issue at 1k.
 - Before longer FLUX training, add a scale-calibrated eval diagnostic: log raw-decode-space stats and compare identity decode / official inverse decode / adaptive ref-std decode / per-channel inverse normalization.
+
+<!-- FLUX2_SCALE_CALIBRATED_EVAL_20260528 -->
+
+## Update — FLUX scale-calibrated eval diagnostic
+
+更新时间：`2026-05-28T13:22Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/FLUX2_SCALE_CALIBRATED_EVAL_2026-05-28.md
+```
+
+The scale-aware B3 step-1000 samples were decoded three ways under the same 1024-image ImageNet-256 eval protocol:
+
+| decode variant | pre-decode scale | decode-space std | FID ↓ | MMD2/KID ↓ |
+|---|---:|---:|---:|---:|
+| official inverse | `1.714043` | `2.677575` | `391.8537` | `0.514579` |
+| identity ablation | `1.0` | `1.562140` | `345.6951` | `0.399690` |
+| adaptive ref-std match | `1.097240` | `1.714043` | `354.0362` | `0.421643` |
+
+Conclusion: the official inverse scale was over-amplifying early generated samples. Adaptive std-match improves it, but scalar calibration alone still does not beat identity/raw. Keep the FLUX VAE route alive, but do not spend long-run budget until per-channel normalization / sampler scale policy is tested.
