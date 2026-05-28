@@ -616,3 +616,94 @@ Next expected gates:
 
 - `step_00014000.pt` checkpoint + built-in FD audit around step `14000`.
 - `step_00020000.pt` checkpoint + built-in eval/sample at step `20000`.
+
+<!-- B3_B96_FD_JVP_FINAL_RISK_RECLASSIFICATION_20260528T0940Z -->
+
+## Final FD/JVP risk reclassification after A/B/C audit
+
+更新时间：`2026-05-28T09:40Z`
+
+English record / paper wording:
+
+> Dedicated FD/JVP audit on the step-10000 PAE B3 checkpoint confirms that the fp32 JVP path is numerically correct when TF32 is disabled. With TF32 off, both math SDPA and default SDPA produce FD relative errors in the 7.7e-4 ~ 9.6e-4 range for eps=3e-3/1e-3, while TF32-on finite-difference diagnostics show much larger apparent errors. Therefore, the earlier high built-in FD rel values in the H100 fast b96 run are attributed to TF32-sensitive finite-difference diagnostics, not to an incorrect JVP implementation. The r=t degeneration remains exact with target-v=0.
+
+中文统一口径：
+
+> step-10000 PAE B3 checkpoint 的专项 FD/JVP audit 已确认：在关闭 TF32 的严格数值口径下，fp32 JVP target 路径是正确的；math SDPA 与 default SDPA 在 eps=3e-3/1e-3 下都回到 7.7e-4 ~ 9.6e-4 的 FD rel。此前 H100 fast b96 run 中 built-in FD rel 出现 0.05 ~ 0.11，主要是 TF32 + finite-difference sensitivity / 诊断口径导致，不是 JVP 主链路错误。r=t 退化路径仍严格正确，target-v=0。
+
+Operational decision:
+
+- Keep the PAE B3 b96 mainline on the fast H100 config (`allow_tf32=true`, `sdpa_kernel=default`, `bf16_backbone_fp32_jvp`); do not stop or slow the main run solely because fast built-in FD rel is above the old `1e-2` practical gate.
+- Interpret built-in FD rel under the fast config as a finite/no-NaN smoke diagnostic plus TF32-sensitive trend, not as the strict JVP correctness gate.
+- Strict FD/JVP correctness audits should use: TF32 off, fixed seed, small fixed non-degenerate batch, `model.eval()`, dropout/class dropout disabled or fixed, JVP/FD fp32, global math/default SDPA comparison, and `eps` sweep (`1e-2`, `3e-3`, `1e-3`).
+- Next gates: `step_00014000.pt` checkpoint + built-in FD audit; `step_00020000.pt` checkpoint + EMA sample + PAE decode + image-space metrics.
+- Step-20000 image-space evaluation should connect real ImageNet-256 Inception FID/MMD/KID using the cropped uint8 ImageNet cache, not only the compact random-projection smoke metric. If the generated eval batch remains `64` samples, label the Inception numbers as early/sample-count-limited diagnostics rather than publishable 50k FID.
+
+<!-- B3_B96_STEP14000_AND_INCEPTION_EVAL_READY_20260528T0948Z -->
+
+## Step-14000 gate reached; step-20000 Inception eval helper prepared
+
+更新时间：`2026-05-28T09:48Z`
+
+Main training remains alive under `setsid` on H100 and continued past the gate.
+
+Step-14000 checkpoint / built-in FD audit:
+
+```text
+checkpoint: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00014000.pt
+created_at_utc: 2026-05-28T09:41:25Z
+latest.pt -> step_00014000.pt
+```
+
+Built-in fast-config FD at step `14000`:
+
+```json
+{
+  "fd_rel_err_full_jvp": 0.07857135953004488,
+  "fd_eps": 0.01,
+  "fd_mode": "fp32",
+  "jvp_mode": "fp32",
+  "allow_tf32_fast_config": true,
+  "r_eq_t_count": 70,
+  "r_eq_t_total": 96,
+  "realized_r_eq_t_fraction": 0.7291666865348816,
+  "u_finite": true,
+  "du_finite": true,
+  "fd_finite": true,
+  "no_nan_or_inf": true,
+  "target_detached": true,
+  "all_r_eq_t_degenerate_target_minus_v_max_abs": 0.0
+}
+```
+
+Interpretation: this `0.07857` is consistent with the settled fast-config TF32 finite-difference diagnostic artifact pattern; it is **not** treated as evidence of a broken JVP path. Strict JVP correctness gating remains the dedicated TF32-off fixed non-degenerate eps-sweep audit.
+
+Step-20000 eval preparation:
+
+- Added script: `experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/decode_and_inception_eval_step.py`.
+- Purpose: decode generated PAE latents, read real cropped uint8 ImageNet-256 cache directly, and compute image-space InceptionV3 pool-2048 FID / RBF-MMD / poly3-KID.
+- Default devices are CPU (`--decode-device cpu --inception-device cpu`) to avoid disturbing the active H100 training process.
+- Inception weights have been downloaded/cached locally via torchvision (`inception_v3_google-0cc3c7bd.pth`).
+- Smoke validation completed on step-10000 with 4 generated + 4 real ImageNet-256 images: script status `ok`, feature dim `2048`, finite metrics produced. This validates wiring only; step-20000 should run on the full generated eval batch.
+
+Recommended step-20000 command after trainer writes `eval/step_00020000/sample_latents.safetensors`:
+
+```bash
+EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+python3 "$EXP/scripts/decode_and_inception_eval_step.py" \
+  --sample-latents "$EXP/results/fullcache_realdata_singleproc_template/eval/step_00020000/sample_latents.safetensors" \
+  --output-dir "$EXP/results/fullcache_realdata_singleproc_template/eval/step_00020000/inception_eval" \
+  --real-image-cache /workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors \
+  --num-real 0 \
+  --real-seed 20260528 \
+  --decode-device cpu \
+  --decode-batch-size 2 \
+  --inception-device cpu \
+  --inception-batch-size 16 \
+  --torch-num-threads 8 \
+  --max-save-images 256 \
+  --grid-count 64
+```
+
+If trainer eval still emits `64` generated samples, record resulting FID/MMD/KID as early/sample-count-limited Inception diagnostics, not publishable 50k FID.
+
