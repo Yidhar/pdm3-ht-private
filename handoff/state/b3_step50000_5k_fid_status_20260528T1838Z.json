@@ -1,0 +1,28 @@
+{
+  "updated_at_utc": "2026-05-28T18:38:00Z",
+  "experiment": "2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer",
+  "route": "PAE_DINOv2L_d32 + LightningDiT_B3 + MeanFlow + EMA + PAE_decode + Inception",
+  "step": 50000,
+  "num_generated": 5000,
+  "num_real": 5000,
+  "feature_method": "torchvision_inception_v3_imagenet1k_v1_pool2048",
+  "fid": 55.52831543442829,
+  "inception_mmd_rbf": 0.032845868596164784,
+  "inception_kid_poly3": 0.03894902108381171,
+  "sample_latents": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00050000/sample_latents_5000.safetensors",
+  "metrics_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00050000/inception_eval_5k/inception_metrics.json",
+  "hf_repo": "LAXMAYDAY/pdm3-ht-model-artifacts",
+  "hf_remote_path": "b3_meanflow_realdata/fullcache_b96/step_00050000",
+  "hf_latest_metrics_commit": "019298e6dee68c5b2963015e60eb5b5a8210e194",
+  "trainer_resume_checkpoint": "checkpoints/latest.pt -> step_00052000.pt",
+  "fd_loss_status": "deferred",
+  "cosine_plan": {
+    "applied_to_live_run": false,
+    "current_live_lr": 0.0002,
+    "batch_scaled_base_lr": 0.000075,
+    "min_lr": 0.0000075,
+    "warmup_steps": 13333,
+    "end_step": 1070000,
+    "resume_policy": "scheduler_over_checkpoint, no rewarm, optional 2k-5k transition"
+  }
+}

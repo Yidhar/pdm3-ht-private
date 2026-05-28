@@ -177,9 +177,9 @@ Actual 50k gate status:
 
 - Step `50k` 64-sample image-space Inception eval completed with `FID=286.290236`, `MMD=0.028853`, `KID=0.036241` (`n_gen=n_real=64`).
 - This passes the `<307` health gate, so no LR change is recommended solely from the earlier loss increase or the 30k→40k small-FID bump.
-- Preferred anchor timing is therefore the next natural `60k` checkpoint, using a controlled short trainer pause for GPU sampling and then immediate resume.
+- Historical note: this document originally suggested using the next natural `60k` checkpoint, but the user requested an immediate exact step-50k 5K anchor. That exact step-50k anchor has now completed; see the actual-result section below.
 
-One-shot controller for the preferred `60k` anchor:
+One-shot controller for a future optional `60k` anchor:
 
 ```bash
 EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
@@ -188,4 +188,73 @@ nohup env STEP=60000 NUM_SAMPLES=5000 \
   > "$EXP/logs/b3_5k_fid_anchor_step_00060000_$(date -u +%Y%m%dT%H%M%SZ).log" 2>&1 &
 ```
 
-The controller waits for `step_00060000.pt` and the trainer's normal small eval, stops the trainer process group to free the H100, writes `eval/step_00060000/sample_latents_5000.safetensors`, resumes training from `latest.pt` with the on-disk long-run config, then launches CPU decode/Inception into `eval/step_00060000/inception_eval_5k/`.
+For a future optional `60k` or later anchor, the controller waits for the chosen `step_XXXXXXXX.pt` and the trainer's normal small eval, stops the trainer process group to free the H100, writes `eval/step_XXXXXXXX/sample_latents_5000.safetensors`, resumes training from `latest.pt` with the on-disk long-run config, then launches CPU decode/Inception into `eval/step_XXXXXXXX/inception_eval_5k/`.
+
+<!-- B3_STEP50000_5K_FID_ACTUAL_20260528 -->
+
+## Actual step-50k 5K true Inception FID anchor — 2026-05-28
+
+The exact step-50k checkpoint was retained and evaluated with a `5,000` generated / `5,000` real ImageNet-256 true Inception pass. This is the first meaningful early image-space anchor for the PAE B3 b96 MeanFlow route; the normal `64`-sample trainer FID remains a smoke/wiring metric only.
+
+| metric | value |
+|---|---:|
+| checkpoint | `step_00050000` |
+| generated / real | `5000 / 5000` |
+| FID ↓ | `55.52831543442829` |
+| Inception RBF MMD ↓ | `0.032845868596164784` |
+| Inception poly3 KID ↓ | `0.03894902108381171` |
+| feature method | `torchvision_inception_v3_imagenet1k_v1_pool2048` |
+| 5K sampling elapsed | `321.56 sec` |
+| GPU decode + Inception elapsed | `107.22 sec` |
+
+Local artifacts:
+
+```text
+results/fullcache_realdata_singleproc_template/eval/step_00050000/sample_latents_5000.safetensors
+results/fullcache_realdata_singleproc_template/eval/step_00050000/sample_latents_5000.json
+results/fullcache_realdata_singleproc_template/eval/step_00050000/inception_eval_5k/inception_metrics.json
+results/fullcache_realdata_singleproc_template/eval/step_00050000/inception_eval_5k/inception_metrics.md
+```
+
+HF artifacts were refreshed under:
+
+```text
+https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/tree/main/b3_meanflow_realdata/fullcache_b96/step_00050000
+```
+
+Latest relevant HF commit containing the 5K Inception metrics:
+
+```text
+019298e6dee68c5b2963015e60eb5b5a8210e194
+```
+
+Training resumed after eval from `checkpoints/latest.pt -> step_00052000.pt`; the live run did not roll back to 50k. The retained exact eval checkpoint is stored locally under `checkpoints_retained_for_eval/step_00050000_5k_anchor.pt`.
+
+<!-- B3_COSINE_LR_PLAN_20260528 -->
+
+## Planned later cosine LR decay — 2026-05-28
+
+No LR scheduler is active in the live trainer at this point; current live config still uses `optimizer.lr: 0.0002`. For a later checkpoint-controlled switch or a new long-run branch, use the batch-scaled MeanFlow reference plan:
+
+```text
+reference: batch 128, lr 1e-4, cosine decay
+active batch: 96
+batch-scaled base_lr = 1e-4 * 96 / 128 = 7.5e-5
+min_lr = 7.5e-6
+warmup_steps = 13333
+end_step = 1070000
+```
+
+Cosine formula:
+
+```python
+if step < warmup_steps:
+    lr = base_lr * step / warmup_steps
+else:
+    p = min(1.0, max(0.0, (step - warmup_steps) / (end_step - warmup_steps)))
+    lr = min_lr + 0.5 * (base_lr - min_lr) * (1.0 + cos(pi * p))
+```
+
+Schedule values: `50k -> 7.480e-5`, `100k -> 7.389e-5`, `400k -> 5.505e-5`, `800k -> 1.780e-5`, `1.07M -> 7.500e-6`.
+
+For the already-running `2e-4` run, do not rewarm. If switching this run, resume at a natural checkpoint and explicitly override optimizer param-group LR after checkpoint load (`scheduler_over_checkpoint`), optionally ramping down from `2e-4` to the cosine target over `2k–5k` steps. Given the healthy step-50k 5K FID (`55.53`), this is a planned later control knob rather than an emergency hot change.

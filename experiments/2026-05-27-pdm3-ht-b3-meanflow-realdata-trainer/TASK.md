@@ -53,3 +53,23 @@ Long-run comparison target:
 - Intermediate steps (`20k`, `30k`, `100k`) are for smoke/eval pipeline validation, sample sanity, and trend monitoring.
 - Local safety checkpoints may be written every `10k` steps, but HF long-term full-checkpoint archives are sparse (`100k` multiples plus final `1.07M`) and stale local `.pt` files are cleaned to control disk pressure.
 
+
+<!-- B3_STEP50000_5K_FID_AND_COSINE_STATUS_20260528 -->
+
+## Status update — step-50k 5K FID anchor and later cosine plan
+
+- Exact `step_00050000` PAE B3 b96 checkpoint evaluated with `5000` EMA generated samples vs `5000` real ImageNet-256 references.
+- True Inception result: **FID `55.528315`**, RBF MMD `0.0328459`, poly3 KID `0.0389490`.
+- Treat the normal `64`-sample trainer FID as smoke only; do not use it for convergence decisions.
+- Main route remains: PAE DINOv2-L d32 latent cache + LightningDiT B3/XL-like backbone + MeanFlow objective + EMA sampling + PAE decode + image-space metrics.
+- Representation Fréchet Loss / FD-loss remains deferred.
+- Training resumed from `latest.pt -> step_00052000.pt` after the 5K GPU eval.
+- HF model artifacts refreshed under `LAXMAYDAY/pdm3-ht-model-artifacts/b3_meanflow_realdata/fullcache_b96/step_00050000`, latest metric commit `019298e6dee68c5b2963015e60eb5b5a8210e194`.
+- The 5K controller was fixed to use exact `/proc/<pid>/cmdline` argv matching for trainer PGIDs, avoiding self-termination from substring matching.
+
+Later LR plan:
+
+- Current live LR is still constant `2e-4`; no hot LR change has been applied.
+- Batch-scaled MeanFlow cosine plan for batch `96`: `base_lr=7.5e-5`, `min_lr=7.5e-6`, `warmup_steps=13333`, `end_step=1070000`.
+- If applying to the current run after a checkpoint, do not rewarm; override optimizer param-group LR after checkpoint load and optionally ramp from `2e-4` to the cosine target over `2k–5k` steps.
+- Trigger for early switch: two consecutive 5K anchors plateau/worsen, or instability after ruling out sampling/eval noise. Otherwise keep the current healthy run stable and consider switching at a clean milestone such as `100k` or in a new branch.

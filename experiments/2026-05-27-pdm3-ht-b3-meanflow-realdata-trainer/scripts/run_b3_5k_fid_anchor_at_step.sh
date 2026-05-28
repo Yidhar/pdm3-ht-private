@@ -85,14 +85,34 @@ PY
 }
 
 trainer_pgids() {
-  ps -eo pgid=,cmd= \
-    | awk -v train_script="$TRAIN_SCRIPT" -v cfg="$CFG" '
-        index($0, "python") && index($0, train_script) && index($0, cfg) {
-          gsub(/^[ \t]+|[ \t]+$/, "", $1);
-          print $1;
-        }
-      ' \
-    | sort -u
+  # Use /proc argv matching instead of `ps | awk` substring matching.
+  # The old awk command line contained the literal trainer path and could match
+  # its own process group, causing the controller to TERM itself.
+  python3 - "$TRAIN_SCRIPT" "$CFG" <<'PY'
+import os, sys
+train_script, cfg = sys.argv[1:]
+pgids = set()
+for pid_s in os.listdir('/proc'):
+    if not pid_s.isdigit():
+        continue
+    try:
+        raw = open(f'/proc/{pid_s}/cmdline', 'rb').read().split(b'\0')
+        cmd = [x.decode('utf-8', 'ignore') for x in raw if x]
+    except Exception:
+        continue
+    if len(cmd) < 4 or not os.path.basename(cmd[0]).startswith('python'):
+        continue
+    if cmd[1] != train_script:
+        continue
+    if not any(a == '--config' and i + 1 < len(cmd) and cmd[i + 1] == cfg for i, a in enumerate(cmd)):
+        continue
+    try:
+        pgids.add(os.getpgid(int(pid_s)))
+    except Exception:
+        pass
+for pgid in sorted(pgids):
+    print(pgid)
+PY
 }
 
 trainer_active() {

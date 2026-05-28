@@ -973,3 +973,35 @@ Result on the same 100 ImageNet-256 ADM crops:
 | FLUX.2 VAE | `4.866488` | `30.733994 dB` | `0.0168896` |
 
 Decision: `FLUX rFID >> PAE rFID` is false; FLUX.2 reconstruction ceiling is not the reason to stop the route. Current FLUX B3 issues should be deferred as training/sampler/latent-scale retuning after the PAE/mainline work.
+
+<!-- B3_STEP50000_5K_FID_AND_COSINE_20260528 -->
+
+## Update — B3 PAE b96 step-50k 5K true Inception FID and cosine LR planning
+
+更新时间：`2026-05-28T18:38Z`
+
+Detailed handoff:
+
+```text
+/workspace/PDM/handoff/B3_STEP50000_5K_FID_AND_COSINE_PLAN_2026-05-28.md
+```
+
+Result from exact `step_00050000` checkpoint:
+
+| eval | generated | real | FID ↓ | RBF MMD ↓ | poly3 KID ↓ |
+|---|---:|---:|---:|---:|---:|
+| true Inception 5K anchor | `5000` | `5000` | `55.528315` | `0.0328459` | `0.0389490` |
+
+Interpretation:
+
+- This is the first meaningful early image-space anchor for the PAE B3 b96 MeanFlow route.
+- The normal `64`-sample trainer FID remains a smoke/wiring check and should not be used for convergence decisions.
+- Training resumed after GPU eval from `latest.pt -> step_00052000.pt`; the live run did not roll back.
+- HF artifact watcher refreshed `b3_meanflow_realdata/fullcache_b96/step_00050000`; latest metric commit: `019298e6dee68c5b2963015e60eb5b5a8210e194`.
+- Controller bugfix committed in code: exact `/proc/<pid>/cmdline` trainer matching replaces unsafe substring matching.
+
+Cosine plan for later:
+
+- Live LR unchanged for now: `2e-4` constant.
+- Batch-scaled MeanFlow reference plan for batch `96`: `base_lr=7.5e-5`, `min_lr=7.5e-6`, `warmup_steps=13333`, `end_step=1070000`.
+- If switching the current run later, do not rewarm; override restored optimizer LR after checkpoint load and optionally ramp from `2e-4` down to the cosine target over `2k–5k` steps.

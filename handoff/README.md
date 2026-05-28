@@ -60,3 +60,17 @@ handoff/state/b3_fullcache_latest_launch.json
 - Active PID/log: see `handoff/state/b3_h100_speedup_latest.json`
 - Current batch: 32; global SDPA default with JVP/FD math-context patch; TF32 enabled.
 - Current throughput: ~57.8 samples/sec vs baseline ~10.6 samples/sec (~5.47x).
+
+<!-- B3_STEP50000_5K_FID_POINTER_20260528 -->
+
+## Latest B3 PAE b96 update — step-50k 5K FID anchor
+
+更新时间：`2026-05-28T18:38Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_STEP50000_5K_FID_AND_COSINE_PLAN_2026-05-28.md
+```
+
+Key result: exact `step_00050000` checkpoint, `5000` generated / `5000` real true Inception pass, **FID `55.528315`**, RBF MMD `0.0328459`, poly3 KID `0.0389490`. Normal `64`-sample FID is smoke only. Training resumed from `latest.pt -> step_00052000.pt`; step-50k artifacts were uploaded to HF commit `019298e6dee68c5b2963015e60eb5b5a8210e194` under `LAXMAYDAY/pdm3-ht-model-artifacts/b3_meanflow_realdata/fullcache_b96/step_00050000`.
