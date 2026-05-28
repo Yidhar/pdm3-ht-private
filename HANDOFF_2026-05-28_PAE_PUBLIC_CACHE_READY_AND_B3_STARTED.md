@@ -464,4 +464,4 @@ HF artifacts repo 已验证存在且为 private：`LAXMAYDAY/pdm3-ht-model-artif
 - GitHub staging repo 已提交本地 commit，路径 `/workspace/pdm3-ht-private-sync`；具体 hash 用 `git -C /workspace/pdm3-ht-private-sync log -1 --oneline` 查看。
 - 已生成可手工导入的 bundle；最新 bundle 用 `ls -lh /workspace/pdm3-ht-private-sync_*.bundle` 查看。
 - 已尝试 `git push -u origin main`，失败原因仅为本机无 GitHub credential：`fatal: could not read Username for 'https://github.com': terminal prompts disabled`。
-- HF model artifacts repo 文档已更新成功，最新 observed sha：`11e6003743181a85f635a2f658ae568d6ee7302f`；上传了 `handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md`。
+- HF model artifacts repo 文档已更新成功；上传了 `handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md`。最新 repo sha 用 Hugging Face API 查询。

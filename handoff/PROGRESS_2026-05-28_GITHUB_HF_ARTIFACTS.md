@@ -92,6 +92,6 @@ The HF model artifacts repository README and this handoff note were updated succ
 
 ```text
 repo: LAXMAYDAY/pdm3-ht-model-artifacts
-latest observed sha after doc upload: 11e6003743181a85f635a2f658ae568d6ee7302f
+latest repo sha: check with `HfApi().repo_info("LAXMAYDAY/pdm3-ht-model-artifacts", repo_type="model").sha`
 uploaded doc: handoff/PROGRESS_2026-05-28_GITHUB_HF_ARTIFACTS.md
 ```
