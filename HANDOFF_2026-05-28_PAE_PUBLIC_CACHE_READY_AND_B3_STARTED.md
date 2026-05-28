@@ -1011,3 +1011,100 @@ step 30000: checkpoint + EMA sample + CPU PAE decode + 64/64 Inception FID/MMD/K
 ```
 
 Caveat: these are still early small-sample `64 generated / 64 real` convergence diagnostics, not official 50k FID. Use them for same-run trend monitoring and pipeline validation.
+
+<!-- B3_B96_LONGRUN_HF_ARCHIVE_CLEANUP_20260528T1240Z -->
+
+## B3 b96 long-run archive policy + HF upload/cleanup watcher
+
+更新时间：`2026-05-28T12:40Z`
+
+User decision update:
+
+- Full checkpoint cadence can be extended. The previous `checkpoint_every=2000` was useful for startup safety, but full checkpoints are about `11 GiB` because they include model + EMA + optimizer.
+- Model artifacts should be routed to the shared HF model artifact repo and local superseded model files should be cleaned.
+- For comparison against the original PAE training regime, treat the first clearly comparable long-run point as roughly `1.07M` steps, not the current early `20k/30k/100k` engineering probes.
+
+Config file updated for restart/resume source of truth:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full_fast_h100_b96.yaml
+```
+
+Key changes:
+
+```yaml
+train:
+  max_steps: 1070000
+  checkpoint_every: 10000
+  keep_last_checkpoints: 2
+
+meanflow:
+  fd_audit_every: 10000
+```
+
+Important runtime caveat:
+
+- The currently running trainer process already read the old config into memory, so it still has the old in-memory schedule until restart/resume.
+- The config file is now the source of truth for the next resume; when the trainer is restarted from `resume_from: auto`, it will continue toward `1,070,000` steps and save full checkpoints every `10k` steps.
+
+HF artifact/cleanup automation added and started:
+
+```text
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/watch_b3_hf_upload_and_cleanup.py
+launcher: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/watch_b3_hf_upload_and_cleanup.sh
+pid: 56765
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_hf_upload_cleanup_20260528T123815Z.log
+state: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/hf_artifact_upload_state.json
+HF repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+remote prefix: b3_meanflow_realdata/fullcache_b96
+```
+
+Watcher policy:
+
+- Upload full trainer checkpoints only at `10k` multiples, starting from step `20000`.
+- Current first pending upload: `step_00020000.pt` -> `b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt`.
+- Delete uploaded archive checkpoints after they are no longer the local `latest.pt` target.
+- Delete non-archive local checkpoints after a newer local `latest.pt` exists.
+- Keep the current `latest.pt` target locally for fast resume.
+- Upload eval artifacts from step `>=30000` to HF, excluding raw real ImageNet images/real NPZ payloads by default.
+
+Immediate cleanup already applied:
+
+```text
+Deleted stale non-archive local checkpoints:
+- step_00018000.pt
+- step_00022000.pt
+- step_00024000.pt
+
+Kept:
+- step_00020000.pt  # archive candidate, currently uploading to HF
+- step_00026000.pt  # current latest.pt target at cleanup time
+```
+
+FID watcher was also restarted with long-run stop step `1070000` and future CPU evals now pass `--no-save-npz` to avoid saving combined generated+real ImageNet NPZ payloads:
+
+```text
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/watch_b3_fid_convergence.sh
+pid: 56819
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_fid_convergence_watch_20260528T123841Z.log
+start_step: 30000
+stop_step: 1070000
+```
+
+Current mainline snapshot when this policy was applied:
+
+```json
+{
+  "step": 27206,
+  "created_at_utc": "2026-05-28T12:39:59Z",
+  "loss": 0.4191620945930481,
+  "batch_size": 96,
+  "elapsed_sec": 0.7569469506852329
+}
+```
+
+Interpretation update:
+
+- Current `20k`/`30k` FID diagnostics remain early engineering/convergence probes.
+- Do not over-compare them to the original PAE paper regime; the first more meaningful apples-to-apples long-run checkpoint is around `1.07M` steps.
+- Continue the base `PAE latent + LightningDiT B3/XL + MeanFlow objective` run; FD-loss / Representation Fréchet Loss remains deferred.

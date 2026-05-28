@@ -703,3 +703,37 @@ Detailed handoff:
 ```text
 /workspace/PDM/handoff/FLUX2_VAE_RECON_DIAGNOSTIC_2026-05-28.md
 ```
+
+<!-- B3_B96_LONGRUN_HF_ARCHIVE_CLEANUP_20260528T1240Z -->
+
+## 2026-05-28T12:40Z — B3 long-run archive policy and HF cleanup automation
+
+- Updated B3 b96 config for long-run restart/resume:
+  - `max_steps: 1070000`
+  - `checkpoint_every: 10000`
+  - `keep_last_checkpoints: 2`
+  - `meanflow.fd_audit_every: 10000`
+- Rationale: full `.pt` checkpoints are ~11 GiB because they include model + EMA + optimizer; startup safety no longer needs 2k-step full archives.
+- User comparison note recorded: original PAE-paper comparable point is roughly `1.07M` steps; current `20k/30k` points are early diagnostics only.
+- Added HF upload/cleanup watcher:
+  - `scripts/watch_b3_hf_upload_and_cleanup.py`
+  - `scripts/watch_b3_hf_upload_and_cleanup.sh`
+- Started watcher:
+  - pid `56765`
+  - log `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_hf_upload_cleanup_20260528T123815Z.log`
+  - state `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/hf_artifact_upload_state.json`
+  - target `https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts`
+  - remote prefix `b3_meanflow_realdata/fullcache_b96`
+- Current first checkpoint upload is running:
+  - local `.../checkpoints/step_00020000.pt`
+  - remote `b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt`
+- Cleanup policy:
+  - keep current `latest.pt` target locally for resume;
+  - upload 10k-multiple full checkpoints to HF;
+  - delete uploaded archive checkpoints after superseded by a newer latest;
+  - delete non-archive local full checkpoints after superseded.
+- Immediate local cleanup performed:
+  - deleted `step_00018000.pt`, `step_00022000.pt`, `step_00024000.pt`;
+  - kept `step_00020000.pt` for HF upload and `step_00026000.pt` as current latest target.
+- Restarted FID convergence watcher with long-run `STOP_STEP=1070000` and future eval `--no-save-npz`.
+

@@ -7,7 +7,7 @@ RES=${RES:-$EXP/results/fullcache_realdata_singleproc_template}
 REAL_CACHE=${REAL_CACHE:-/workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors}
 INTERVAL=${B3_FID_WATCH_INTERVAL:-180}
 START_STEP=${B3_FID_WATCH_START_STEP:-30000}
-STOP_STEP=${B3_FID_WATCH_STOP_STEP:-100000}
+STOP_STEP=${B3_FID_WATCH_STOP_STEP:-1070000}
 REAL_SEED=${B3_FID_REAL_SEED:-20260528}
 LOG_DIR="$EXP/logs"
 mkdir -p "$LOG_DIR" "$RES/eval"
@@ -119,7 +119,8 @@ PY
       --inception-batch-size 16 \
       --torch-num-threads 8 \
       --max-save-images 256 \
-      --grid-count 64
+      --grid-count 64 \
+      --no-save-npz
     rc=$?
     set -e
     rm -f "$running_marker"
