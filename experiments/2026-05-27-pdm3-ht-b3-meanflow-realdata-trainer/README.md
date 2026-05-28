@@ -110,7 +110,7 @@ The active B3 b96 H100 route is now treated as a long run toward the first PAE-p
 - Full trainer checkpoints are large (`~11 GiB`) because they include model, EMA, optimizer and RNG state.
 - Local safety checkpoint cadence is `10k` steps (`checkpoint_every: 10000`) with `keep_last_checkpoints: 2`, but long-term HF archives are sparse: `100k` multiples plus the final `1.07M` step.
 - A background HF watcher uploads only sparse archive checkpoints to `LAXMAYDAY/pdm3-ht-model-artifacts` under `b3_meanflow_realdata/fullcache_b96/` and deletes uploaded/superseded local `.pt` files while keeping the current `latest.pt` target for fast resume.
-- Future image-space eval artifacts are uploaded to HF from step `>=30000`, excluding raw real ImageNet images / raw NPZ payloads by default.
+- Future image-space eval artifacts are uploaded to HF from step `>=30000`, excluding raw real ImageNet images / raw NPZ payloads by default. The allow-list includes the trainer's normal `sample_latents.safetensors`, larger anchor files such as `sample_latents_5000.safetensors` plus their JSON metadata, generated PNGs/grids when present, metric JSON/MD files, and logs.
 
 Operational caveat: the process already running on 2026-05-28 loaded the old config in memory. The updated `max_steps=1070000`, `checkpoint_every=10000` and `fd_audit_every=10000` become fully active after a controlled restart/resume from `checkpoints/latest.pt` (or after the old run reaches its previous stop and is resumed).
 
@@ -172,3 +172,20 @@ Decision gate around the existing 64-sample compact/image-space FID trend:
 
 - If the step-50k small eval is `< 307` or basically flat/improving, treat the 30k→40k bump as likely sample-count noise and run the 5k anchor at either `50k` or the next natural `60k` checkpoint.
 - If the step-50k small eval is `> 310` and still rising, run the 5k anchor immediately from the step-50k checkpoint before changing LR; use the 5k number to distinguish true degradation from noisy 64-sample diagnostics.
+
+Actual 50k gate status:
+
+- Step `50k` 64-sample image-space Inception eval completed with `FID=286.290236`, `MMD=0.028853`, `KID=0.036241` (`n_gen=n_real=64`).
+- This passes the `<307` health gate, so no LR change is recommended solely from the earlier loss increase or the 30k→40k small-FID bump.
+- Preferred anchor timing is therefore the next natural `60k` checkpoint, using a controlled short trainer pause for GPU sampling and then immediate resume.
+
+One-shot controller for the preferred `60k` anchor:
+
+```bash
+EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+nohup env STEP=60000 NUM_SAMPLES=5000 \
+  bash "$EXP/scripts/run_b3_5k_fid_anchor_at_step.sh" \
+  > "$EXP/logs/b3_5k_fid_anchor_step_00060000_$(date -u +%Y%m%dT%H%M%SZ).log" 2>&1 &
+```
+
+The controller waits for `step_00060000.pt` and the trainer's normal small eval, stops the trainer process group to free the H100, writes `eval/step_00060000/sample_latents_5000.safetensors`, resumes training from `latest.pt` with the on-disk long-run config, then launches CPU decode/Inception into `eval/step_00060000/inception_eval_5k/`.

@@ -338,6 +338,8 @@ def upload_eval_dir(
     allow_patterns = [
         "eval_record.json",
         "sample_latents.safetensors",
+        "sample_latents_*.safetensors",
+        "sample_latents_*.json",
         "compact_metrics.json",
         "compact_metrics.md",
         "decoded_samples.npz",
