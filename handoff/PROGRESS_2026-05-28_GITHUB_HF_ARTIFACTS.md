@@ -729,7 +729,8 @@ Detailed handoff:
   - remote `b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt`
 - Cleanup policy:
   - keep current `latest.pt` target locally for resume;
-  - upload 10k-multiple full checkpoints to HF;
+  - keep 10k local safety checkpoints only transiently;
+  - upload sparse long-term full checkpoints to HF at 100k multiples plus final 1.07M, not every 10k;
   - delete uploaded archive checkpoints after superseded by a newer latest;
   - delete non-archive local full checkpoints after superseded.
 - Immediate local cleanup performed:
@@ -747,3 +748,14 @@ Detailed handoff:
 - Local `step_00020000.pt` was deleted after upload.
 - Current local checkpoint footprint: one full checkpoint, `latest.pt -> step_00026000.pt` (~11 GiB).
 - Next intended full checkpoint archive: step `30000`.
+
+<!-- B3_B96_SPARSE_HF_ARCHIVE_20260528T1255Z -->
+
+### 2026-05-28T12:55Z — checkpoint archive cadence corrected to sparse milestones
+
+The initial long-run watcher used `10k` as both the local safety checkpoint cadence and the HF archive cadence. That would produce 100+ full `.pt` files by 1.07M steps, which is too many for long-term storage. The policy is now decoupled:
+
+- local safety checkpoint cadence remains `10k` after restart/resume; only current `latest.pt` is kept locally for fast recovery;
+- HF long-term full-checkpoint archives are sparse: `100k` multiples plus the final `1,070,000` step;
+- already-uploaded `step_00020000.pt` remains as an early diagnostic/resume artifact;
+- eval/FID artifacts can still be produced more frequently because they are small compared with full optimizer checkpoints.

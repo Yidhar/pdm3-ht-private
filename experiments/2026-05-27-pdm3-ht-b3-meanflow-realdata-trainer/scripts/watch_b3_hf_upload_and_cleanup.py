@@ -170,6 +170,7 @@ class UploadConfig:
     remote_prefix: str
     archive_every: int
     checkpoint_start_step: int
+    archive_extra_steps: List[int]
     eval_start_step: int
     stop_step: int
     delete_after_upload: bool
@@ -177,6 +178,13 @@ class UploadConfig:
     delete_latest_after_upload: bool
     upload_eval: bool
     upload_checkpoints: bool
+
+
+def is_archive_checkpoint(cfg: UploadConfig, step: int) -> bool:
+    """Return true for sparse long-term HF checkpoint archive milestones."""
+    if int(step) in set(int(x) for x in cfg.archive_extra_steps):
+        return True
+    return bool(cfg.archive_every > 0 and step >= cfg.checkpoint_start_step and step % cfg.archive_every == 0)
 
 
 def init_state(args: argparse.Namespace) -> Dict[str, Any]:
@@ -446,7 +454,7 @@ def process_checkpoints(
                         continue
                 except FileNotFoundError:
                     continue
-            is_archive = cfg.archive_every > 0 and step >= cfg.checkpoint_start_step and step % cfg.archive_every == 0
+            is_archive = is_archive_checkpoint(cfg, step)
             if (not is_archive) and (latest_step < 0 or step < latest_step):
                 maybe_delete_checkpoint(
                     state=state,
@@ -462,9 +470,7 @@ def process_checkpoints(
     if cfg.upload_checkpoints:
         for ckpt in checkpoint_paths(ckpt_dir):
             step = step_from_path(ckpt)
-            if step < cfg.checkpoint_start_step:
-                continue
-            if cfg.archive_every <= 0 or step % cfg.archive_every != 0:
+            if not is_archive_checkpoint(cfg, step):
                 continue
             ok = upload_checkpoint(api=api, cfg=cfg, state=state, state_path=state_path, ckpt=ckpt, latest_target=latest_target)
             if ok and cfg.delete_after_upload:
@@ -490,7 +496,7 @@ def process_checkpoints(
                         continue
                 except FileNotFoundError:
                     continue
-            is_archive = cfg.archive_every > 0 and step >= cfg.checkpoint_start_step and step % cfg.archive_every == 0
+            is_archive = is_archive_checkpoint(cfg, step)
             if not is_archive:
                 if latest_step < 0 or step < latest_step:
                     maybe_delete_checkpoint(
@@ -554,6 +560,7 @@ def once(args: argparse.Namespace) -> None:
         remote_prefix=args.remote_prefix,
         archive_every=args.archive_every,
         checkpoint_start_step=args.checkpoint_start_step,
+        archive_extra_steps=[int(x) for x in args.archive_extra_steps],
         eval_start_step=args.eval_start_step,
         stop_step=args.stop_step,
         delete_after_upload=args.delete_after_upload,
@@ -591,8 +598,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--repo-id", default="LAXMAYDAY/pdm3-ht-model-artifacts")
     p.add_argument("--repo-type", default="model")
     p.add_argument("--remote-prefix", default="b3_meanflow_realdata/fullcache_b96")
-    p.add_argument("--archive-every", type=int, default=10000)
-    p.add_argument("--checkpoint-start-step", type=int, default=20000)
+    p.add_argument("--archive-every", type=int, default=100000)
+    p.add_argument("--checkpoint-start-step", type=int, default=100000)
+    p.add_argument(
+        "--archive-extra-steps",
+        type=int,
+        nargs="*",
+        default=[1070000],
+        help="Additional sparse HF checkpoint archive milestones, e.g. final 1.07M step.",
+    )
     p.add_argument("--eval-start-step", type=int, default=30000)
     p.add_argument("--stop-step", type=int, default=1070000)
     p.add_argument("--interval", type=int, default=300)
@@ -619,6 +633,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         remote_prefix=args.remote_prefix,
         archive_every=args.archive_every,
         checkpoint_start_step=args.checkpoint_start_step,
+        archive_extra_steps=[int(x) for x in args.archive_extra_steps],
         eval_start_step=args.eval_start_step,
         stop_step=args.stop_step,
         interval=args.interval,

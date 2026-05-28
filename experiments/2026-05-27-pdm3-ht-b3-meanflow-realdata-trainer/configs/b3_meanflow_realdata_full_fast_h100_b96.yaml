@@ -42,8 +42,9 @@ train:
   sdpa_kernel: default
   allow_tf32: true
   # Full checkpoints are ~11 GiB because they include model + EMA + optimizer.
-  # Archive every 10k steps and let the HF upload/cleanup watcher keep only the
-  # live latest checkpoint locally plus HF-archived milestone checkpoints.
+  # Keep local safety checkpoints every 10k for crash recovery, but do NOT
+  # archive every one to HF. The HF watcher keeps only the live latest locally
+  # and long-term archives sparse milestones (100k multiples + final 1.07M).
   checkpoint_every: 10000
   keep_last_checkpoints: 2
   resume_from: auto

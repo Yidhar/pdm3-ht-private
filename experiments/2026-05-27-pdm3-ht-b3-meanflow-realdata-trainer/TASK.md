@@ -28,3 +28,28 @@
 - Target path 使用 fp32/no-autocast；train backbone 使用 bf16 autocast。
 - r=t samples 理论退化到 target=v；FD audit 需要避免全 r=t 掩盖 JVP edge case。
 - `force_drop_ids` 每个 batch 只采样一次，并同时传给 JVP target 和 train forward，避免 classifier-free dropout mismatch。
+
+<!-- B3_LONGRUN_SCOPE_UPDATE_20260528 -->
+
+## Scope update — 2026-05-28 long-run baseline
+
+Current route remains the base MeanFlow path only:
+
+```text
+ImageNet-1k ADM-cropped 256
+ -> PAE DINOv2-L d32 latent cache
+ -> LightningDiT B3/XL-like backbone
+ -> MeanFlow objective
+ -> EMA sampling
+ -> PAE decode
+ -> image-space Inception FID/MMD/KID diagnostics
+```
+
+Representation Fréchet Loss / FD-loss is intentionally deferred. The immediate goal is to see how far the base PAE + LightningDiT + MeanFlow route converges before adding FD-loss.
+
+Long-run comparison target:
+
+- First PAE-paper-comparable regime: approximately `1.07M` training steps.
+- Intermediate steps (`20k`, `30k`, `100k`) are for smoke/eval pipeline validation, sample sanity, and trend monitoring.
+- Local safety checkpoints may be written every `10k` steps, but HF long-term full-checkpoint archives are sparse (`100k` multiples plus final `1.07M`) and stale local `.pt` files are cleaned to control disk pressure.
+

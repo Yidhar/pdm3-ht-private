@@ -98,3 +98,19 @@ Partial full-cache scan at `2026-05-27T17:06:13Z` saw 22 completed shards / 90,1
 bash experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/run_smoke4096.sh
 bash experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/scan_fullcache_dataset.sh
 ```
+
+<!-- B3_LONGRUN_HF_ARCHIVE_POLICY_20260528 -->
+
+## Long-run archive / HF artifact policy — 2026-05-28
+
+The active B3 b96 H100 route is now treated as a long run toward the first PAE-paper-comparable regime:
+
+- Target steps after restart/resume: `1,070,000` (`train.max_steps: 1070000`).
+- Rationale: the original PAE paper's first meaningful comparable point is around `1.07M` steps, so `20k/30k/100k` are early diagnostics/pipeline gates, not final quality comparisons.
+- Full trainer checkpoints are large (`~11 GiB`) because they include model, EMA, optimizer and RNG state.
+- Local safety checkpoint cadence is `10k` steps (`checkpoint_every: 10000`) with `keep_last_checkpoints: 2`, but long-term HF archives are sparse: `100k` multiples plus the final `1.07M` step.
+- A background HF watcher uploads only sparse archive checkpoints to `LAXMAYDAY/pdm3-ht-model-artifacts` under `b3_meanflow_realdata/fullcache_b96/` and deletes uploaded/superseded local `.pt` files while keeping the current `latest.pt` target for fast resume.
+- Future image-space eval artifacts are uploaded to HF from step `>=30000`, excluding raw real ImageNet images / raw NPZ payloads by default.
+
+Operational caveat: the process already running on 2026-05-28 loaded the old config in memory. The updated `max_steps=1070000`, `checkpoint_every=10000` and `fd_audit_every=10000` become fully active after a controlled restart/resume from `checkpoints/latest.pt` (or after the old run reaches its previous stop and is resumed).
+

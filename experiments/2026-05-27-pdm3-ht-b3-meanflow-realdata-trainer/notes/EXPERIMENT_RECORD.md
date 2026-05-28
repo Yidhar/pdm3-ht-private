@@ -109,3 +109,33 @@ Result at `2026-05-27T17:06:13Z`:
 ```
 
 Interpretation: full-cache writer is still running; current scanner correctly snapshots only completed `.safetensors` shards and does not include the pending unsaved shard samples.
+
+<!-- B3_LONGRUN_HF_ARCHIVE_POLICY_20260528T1248Z -->
+
+## 2026-05-28 long-run archive/HF cleanup policy
+
+User requested longer checkpoint intervals plus automatic HF upload and local checkpoint cleanup, with the note that the original PAE paper's first meaningful comparable point is around `1.07M` steps.
+
+Applied policy for the B3 b96 route:
+
+- `train.max_steps: 1070000`
+- `train.checkpoint_every: 10000`
+- `train.keep_last_checkpoints: 2`
+- `meanflow.fd_audit_every: 10000`
+- HF model artifact repo: `LAXMAYDAY/pdm3-ht-model-artifacts`
+- Remote prefix: `b3_meanflow_realdata/fullcache_b96`
+- HF archive cadence: sparse `100k` multiples plus final `1,070,000`; do not upload every 10k local safety checkpoint.
+- Local policy: keep the current `latest.pt` target for fast resume; delete uploaded archive checkpoints once superseded; delete non-archive checkpoints once a newer local latest exists.
+
+The step-20000 full checkpoint was uploaded successfully to HF and then removed locally:
+
+```text
+remote: b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt
+commit: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/fc5bb486b2a82244728e4cfc2195b6cd4c234772
+sha: fc5bb486b2a82244728e4cfc2195b6cd4c234772
+```
+
+Next archive/eval gate: step `30000` checkpoint + EMA sample + PAE decode + image-space Inception FID/MMD/KID diagnostics. These early small-sample metrics remain convergence diagnostics, not official 50k ImageNet FID.
+
+Caveat: the live process started before the config edit and therefore still uses its old in-memory schedule until a controlled restart/resume from `latest.pt` or natural resume after the old `100000`-step stop.
+
