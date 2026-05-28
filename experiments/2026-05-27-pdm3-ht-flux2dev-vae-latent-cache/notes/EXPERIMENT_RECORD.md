@@ -168,3 +168,399 @@ https://huggingface.co/LAXMAYDAY/pdm3-ht-20260528-code/tree/main/handoff
 ```
 
 Upload policy: handoff README, compact log snippets, and state JSON only. No raw ImageNet, no cropped uint8 cache, no PAE/FLUX latent shards, no checkpoints/model weights, no `/data`, no `/external`.
+
+<!-- FLUX2_ROUTE_RECORD_COMPLETION_20260528 -->
+
+## 2026-05-28 — FLUX.2 route record completion / missing entries backfilled
+
+Audit note: the previous record stopped after the FLUX.2 latent upload supervisor was launched and the HF handoff bundle was created. The later engineering results existed locally but were not written into this experiment record. This section backfills the missing FLUX.2 VAE cache, public dataset upload, real ImageNet-256 reference stats, image-space eval wiring, and B3/MeanFlow short-run results.
+
+Source files for this backfill are local result summaries under:
+
+```text
+experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/
+```
+
+Important artifact policy is unchanged: keep code/config/docs/lightweight summaries in Git; keep large model/checkpoint/eval products in the HF artifact repo only when explicitly selected; do not commit raw ImageNet, cropped uint8 cache, latent shards, logs, full decoded PNG directories, checkpoints, or temporary files.
+
+## 2026-05-28 — FLUX.2 full ImageNet-256 VAE latent cache completed
+
+Source summary:
+
+```text
+experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/flux2_from_cropped_full_summary.json
+```
+
+Final status:
+
+```json
+{
+  "ok": true,
+  "status": "complete",
+  "vae_backend": "AutoencoderKLFlux2_d32",
+  "repo_id": "diffusers/FLUX.2-dev-bnb-4bit",
+  "diffusers_class": "AutoencoderKLFlux2",
+  "latent_mode": "mode",
+  "encoded_total": 1281167,
+  "target_total": 1281167,
+  "num_shards_total": 313,
+  "first_latent_shape": [256, 32, 32, 32],
+  "finished_utc": "2026-05-28T02:55:44+00:00",
+  "output_dir": "/workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full"
+}
+```
+
+Details:
+
+- Input cache: `/workspace/PDM/data/cropped_uint8/imagenet1k_train_256_adm_safetensors`.
+- Output cache: `/workspace/PDM/data/vae_latents/AutoencoderKLFlux2_d32/imagenet256_train_full`.
+- Backend: `AutoencoderKLFlux2`, `diffusers/FLUX.2-dev-bnb-4bit`, subfolder `vae`.
+- Posterior choice: deterministic `mode()`.
+- Model compute dtype during encode: fp32; saved latent dtype: bf16.
+- Stored tensors per shard: `labels`, `latents`, `latents_flip`.
+- Latent shape per image: `[32, 32, 32]`, compared with PAE `[32, 16, 16]`; FLUX.2 route therefore needs backend-specific model/eval config and cannot reuse PAE shape assumptions.
+- Full train set: `1,281,167` samples, `313` shards.
+- Final shard: `latents_rank00_shard000312.safetensors`, `3215` samples, `[3215,32,32,32]`, bf16, validation ok.
+- Upload-validation size later measured the dataset at `167,935,991,352` bytes (`167.936 GB`, decimal), as expected for original + flipped FLUX.2 latents.
+
+Final builder/resume segment timing from the summary:
+
+| metric | value |
+|---|---:|
+| new samples in final resume segment | 511,119 |
+| elapsed sec in final segment | 10,514.968 |
+| avg new samples/sec | 48.609 |
+| encode sec total | 9,462.528 |
+| H2D sec total | 253.846 |
+| save sec total | 453.767 |
+| CUDA peak allocated MB | 41,673.3 |
+
+Interpretation: the full FLUX.2 latent cache is done and locally validated. The earlier batch sweep estimate of ~7 h for full ImageNet was realistic; the final summary reports the last resumed builder segment rather than a clean from-zero benchmark.
+
+## 2026-05-28 — FLUX.2 VAE latent cache uploaded as public HF dataset
+
+Source summary:
+
+```text
+experiments/2026-05-27-pdm3-ht-flux2dev-vae-latent-cache/results/hf_flux2_vae_latents_upload_result_20260528.json
+.hf_publish/flux2_vae_latents_upload_result.json
+```
+
+Final upload status supersedes the earlier "private upload launched" note:
+
+```json
+{
+  "status": "complete",
+  "repo_id": "LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents-public",
+  "repo_type": "dataset",
+  "private": false,
+  "url": "https://huggingface.co/datasets/LAXMAYDAY/pdm3-ht-20260528-flux2-vae-latents-public",
+  "started_utc": "2026-05-28T03:18:02+00:00",
+  "finished_utc": "2026-05-28T03:23:32+00:00"
+}
+```
+
+Validated contents:
+
+| item | value |
+|---|---:|
+| samples | 1,281,167 |
+| shards | 313 |
+| bytes | 167,935,991,352 |
+| GB decimal | 167.936 |
+| first shard | `latents_rank00_shard000000.safetensors` |
+| last shard | `latents_rank00_shard000312.safetensors` |
+| bad files | 0 |
+| temp files | 0 |
+
+Allowed upload patterns were intentionally narrow:
+
+```text
+README.md
+run_config.json
+build_summary.json
+progress.json
+manifest.jsonl
+progress.jsonl
+latents_rank00_shard*.safetensors
+```
+
+Explicitly excluded from this dataset repo: raw ImageNet parquet, cropped uint8 cache, PAE latents, checkpoints, logs, temp files, and unrelated experiment outputs.
+
+## 2026-05-28 — FLUX.2 full-cache trainer scan validated
+
+Source:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_fullcache_dataset_scan/scan_summary.json
+```
+
+Trainer-facing dataset scan result:
+
+```json
+{
+  "num_shards": 313,
+  "total_samples": 1281167,
+  "latent_shape": [32, 32, 32],
+  "flip_prob": 0.5,
+  "latent_norm": false,
+  "latent_multiplier": 1.0,
+  "skipped_files_count": 0
+}
+```
+
+This confirms that the B3 real-data loader can see the complete FLUX.2 full cache, can use original/flip latents, and does not skip unreadable shards.
+
+## 2026-05-28 — Real ImageNet-256 reference stats and FLUX image-space eval wiring completed
+
+Reference-stat source summaries:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/imagenet256_refstats_full_summary.json
+data/reference_stats/imagenet256_adm_train_inception2048/refstats_summary.json
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/real_imagenet256_fid_mmd_wiring_summary.json
+```
+
+Real ImageNet-256 reference stats:
+
+| metric | value |
+|---|---:|
+| reference images | 1,281,167 |
+| cropped shards | 313 |
+| Inception feature dim | 2048 |
+| TF32 | off |
+| batch size | 1024 |
+| elapsed sec | 2,592.585 |
+| samples/sec | 494.166 |
+| CUDA peak MB | 43,027.3 |
+| covariance trace | 180.5874 |
+| MMD/KID reference features | 8,192 x 2,048 |
+
+Reference files:
+
+```text
+/workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_stats.npz
+/workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/imagenet256_train_adm_inception2048_mmd8192_features.npz
+/workspace/PDM/data/reference_stats/imagenet256_adm_train_inception2048/refstats_summary.json
+```
+
+Eval wiring status:
+
+- `eval_flux2vae_imagespace.py` is connected to a real FID/MMD/KID command path rather than a dummy placeholder.
+- `decode_flux2vae_latents.py` decodes sampled FLUX.2 latents to PNG using the FLUX.2 VAE decoder.
+- Decode manifest policy was changed to `first_last` so eval does not write enormous full image manifests by default.
+- Reference stats remain local data artifacts and are not to be committed to Git.
+
+4-image wiring smoke source:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_imagespace_fid_mmd_smoke_summary.json
+```
+
+Smoke result:
+
+```json
+{
+  "practical_gate_pass": true,
+  "final_step": 3,
+  "fd_rel_err_full_jvp": 0.00010939302601559381,
+  "all_r_eq_t_degenerate_target_minus_v_max_abs": 0.0,
+  "image_eval_status": "decoded",
+  "fid_status": "ok",
+  "num_images": 4,
+  "fid": 456.339409075125,
+  "mmd2": 0.45975885396356464,
+  "kid_x1000": 459.75885396356466
+}
+```
+
+This 4-image value is integration-only and is not a quality metric.
+
+## 2026-05-28 — FLUX.2 B3/MeanFlow calibration completed
+
+Source:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_b3medium_calibration_summary.json
+```
+
+Purpose: choose a workable B3-medium config on FLUX.2 `[32,32,32]` latents and verify the Phase-3 precision recipe on the real FLUX latent cache.
+
+| run | hidden/depth/heads | batch | params M | final loss | mean r=t | peak MB | max FD rel | last FD rel | samples/s | live JVP | degen |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|
+| `h384_d8_b16_50s` | 384/8/6 | 16 | 22.661 | 2.8722 | 0.7275 | 1,440.3 | 2.02e-4 | 1.43e-4 | 58.276 | yes | 0 |
+| `h384_d8_b32_20s` | 384/8/6 | 32 | 22.661 | 4.2200 | 0.7563 | 2,439.2 | 7.87e-5 | 7.87e-5 | 81.699 | yes | 0 |
+| `h512_d12_b16_20s` | 512/12/8 | 16 | 58.819 | 3.8392 | 0.7594 | 3,022.5 | 9.89e-5 | 5.64e-5 | 34.830 | yes | 0 |
+| `h512_d12_b64_20s` | 512/12/8 | 64 | 58.819 | 3.5659 | 0.7594 | 8,913.5 | 1.14e-4 | 1.14e-4 | 41.929 | yes | 0 |
+| `h512_d12_b128_20s` | 512/12/8 | 128 | 58.819 | 3.5324 | 0.7660 | 16,783.7 | 8.00e-5 | 8.00e-5 | 59.898 | yes | 0 |
+
+Calibration conclusion:
+
+- `bf16_backbone + fp32_jvp` works on FLUX.2 real latents.
+- JVP target uses live parameters; EMA is not used for target JVP.
+- FD/JVP audits are in the expected `~1e-4` range during calibration.
+- `r=t` degeneration check is exact (`target-v=0`).
+- `h512_d12_b128` is the selected B3-medium short-run point: it is larger than the tiny smoke model, still fits comfortably, and has acceptable throughput.
+
+## 2026-05-28 — FLUX.2 full-cache tiny 1k image-space route validation
+
+Source:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_fullcache_imageeval_pilot_100s_1024img_summary.json
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_fullcache_1k_imageeval_summary.json
+```
+
+Tiny-model pilot (`~0.92M` params, 100 optimizer steps, batch 16):
+
+```json
+{
+  "final_step": 100,
+  "final_loss": 3.4786744117736816,
+  "mean_realized_r_eq_t_fraction": 0.744375,
+  "loop_peak_memory_mb": 168.74365234375,
+  "fd_rel_err_full_jvp": 9.486990313151122e-05,
+  "degenerate_target_minus_v_max_abs": 0.0,
+  "fid": 382.1860103089217,
+  "mmd2": 0.4709882374694505,
+  "kid_x1000": 470.9882374694505,
+  "num_images": 1024
+}
+```
+
+Tiny-model 1k run (`~0.92M` params, batch 16):
+
+| step | FID | MMD2/KID | images | note |
+|---:|---:|---:|---:|---|
+| 500 | 381.9068 | 0.470545 | 1024 | decoded, real ImageNet-256 ref |
+| 1000 | 380.8357 | 0.468050 | 1024 | decoded, real ImageNet-256 ref |
+
+Training/gate summary for tiny 1k:
+
+```json
+{
+  "final_step": 1000,
+  "global_batch_size": 16,
+  "final_loss": 2.915365695953369,
+  "mean_realized_r_eq_t_fraction": 0.746625,
+  "last_fd_rel_err_full_jvp": 0.00032816254595992897,
+  "max_fd_rel_err_full_jvp": 0.0009662954806282971,
+  "degenerate_target_minus_v_max_abs": 0.0,
+  "practical_gate_pass": true
+}
+```
+
+Interpretation: the full data loader, live-param fp32 JVP target, bf16 backbone, sampler, checkpointing, FLUX decode, and real image-space FID/MMD/KID wiring are all functional. Quality numbers from the tiny model are not publishable; they only validate the route and a weak early trend.
+
+## 2026-05-28 — FLUX.2 B3-medium h512/d12/b128 1k short run
+
+Source:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/flux2vae_b3medium_h512_b128_1k_imageeval_summary.json
+```
+
+Model:
+
+```json
+{
+  "hidden_size": 512,
+  "depth": 12,
+  "num_heads": 8,
+  "patch_size": 2,
+  "params_m": 58.819192
+}
+```
+
+Training/gate result:
+
+```json
+{
+  "final_step": 1000,
+  "global_batch_size": 128,
+  "final_loss": 2.2662835121154785,
+  "loss_all_finite": true,
+  "grad_all_finite": true,
+  "mixed_modes_ok": true,
+  "jvp_param_source_all_live": true,
+  "ema_used_for_target_any_step": false,
+  "target_detached_all_steps": true,
+  "class_cond_all_steps": true,
+  "mean_realized_r_eq_t_fraction": 0.75159375,
+  "degenerate_target_minus_v_max_abs": 0.0,
+  "loop_peak_memory_mb": 16783.7314453125,
+  "effective_train_samples_per_sec": 64.8740279785637,
+  "practical_gate_pass": true
+}
+```
+
+FD/JVP audit summary: `11` audits, last FD rel `1.752e-4`, max FD rel `1.197e-3`, all finite.
+
+Image-space eval with real ImageNet-256 reference stats:
+
+| step | FID | MMD2/KID | KID x1000 | images | ref features | status |
+|---:|---:|---:|---:|---:|---:|---|
+| 500 | 346.9461 | 0.402373 | 402.373 | 1024 | 8192 | ok |
+| 1000 | 348.3859 | 0.406783 | 406.783 | 1024 | 8192 | ok |
+
+Interpretation: B3-medium has better early numbers than the tiny full-cache route, but this remains a 1k/1024-image short-run diagnostic, not a publishable FID.
+
+## 2026-05-28 — FLUX.2 B3-medium h512/d12/b128 5k short run
+
+Source run directory:
+
+```text
+experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/shorttrain_flux2vae_b3medium_h512_d12_b128_5k_1024img
+```
+
+Training result parsed from `metrics.jsonl`:
+
+```json
+{
+  "final_step": 5000,
+  "final_loss": 1.9944214820861816,
+  "batch_size": 128,
+  "peak_memory_mb": 16783.626953125,
+  "jvp_param_source": "live",
+  "ema_used_for_target_jvp": false,
+  "target_detached": true,
+  "last_fd_rel_err_full_jvp": 0.0005316118372723249,
+  "fd_no_nan_or_inf": true,
+  "all_r_eq_t_degenerate_target_minus_v_max_abs": 0.0
+}
+```
+
+Image-space eval table, using 1024 generated images and 8192 reference features:
+
+| step | FID | MMD2/KID | KID x1000 | images | status |
+|---:|---:|---:|---:|---:|---|
+| 1000 | 350.3428 | 0.411324 | 411.324 | 1024 | ok |
+| 2000 | 359.3986 | 0.433757 | 433.757 | 1024 | ok |
+| 3000 | 371.9172 | 0.464737 | 464.737 | 1024 | ok |
+| 4000 | 391.8534 | 0.509279 | 509.279 | 1024 | ok |
+| 5000 | 420.7126 | 0.574157 | 574.157 | 1024 | ok |
+
+Local checkpoints present:
+
+```text
+latest.pt
+step_00003000.pt
+step_00004000.pt
+step_00005000.pt
+```
+
+Interpretation / paper-framing constraint:
+
+- The FLUX.2 VAE route engineering smoke is complete: full cache, loader, class conditioning, mixed precision, live-param fp32 JVP target, `r=t` sampler, checkpointing, FLUX decode, and real ImageNet-256 image-space eval all run end-to-end.
+- The current ImageNet-256 class-conditional B3-medium shorttrain does **not** improve image-space metrics under this config; after step 1000 the 1024-image FID/MMD worsens through step 5000.
+- This is **not** a conclusive verdict that FLUX.2 VAE is worse or that the VAE-agnostic story fails. FLUX.2 VAE was not specifically tuned for ImageNet-256 class-conditional ADM-style latent modeling, and this run is a short conditional-generation/domain-transfer stress test.
+- Keep FLUX/Qwen as modern VAE and future T2I/general-image baselines. Report backend-dependent results honestly: PAE may remain the strongest ImageNet-256 backend if it is ImageNet-tuned, while FLUX/Qwen may be stronger baselines for later text-to-image or broader image-distribution work.
+- Before drawing quality conclusions, run a VAE reconstruction-ceiling diagnostic: `real image -> FLUX.2 VAE encode -> decode`, then compute recon FID/MMD/KID plus optional LPIPS/PSNR/SSIM. This separates VAE reconstruction/domain mismatch from MeanFlow/HT modeling quality.
+
+Practical next diagnostics for the FLUX route:
+
+1. VAE reconstruction baseline on ImageNet-256 for FLUX.2 and PAE side by side.
+2. Latent statistics and scaling/normalization check for FLUX.2 latents (`mean/std`, channel stats, possible latent multiplier) before longer B3 runs.
+3. If continuing class-conditional ImageNet on FLUX.2, retune LR, model size, sampler steps, latent normalization, and possibly patchification; do not reuse PAE hyperparameters blindly.
+4. For paper story, phrase this as VAE-backend stress/ablation, not as proof that FLUX.2 VAE is weak.
