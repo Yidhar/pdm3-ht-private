@@ -346,3 +346,127 @@ python3 "$EXP/scripts/decode_and_inception_eval_step.py" \
 
 If trainer eval still emits `64` generated samples, record resulting FID/MMD/KID as early/sample-count-limited Inception diagnostics, not publishable 50k FID.
 
+<!-- B3_B96_STEP20000_EVAL_DONE_20260528T1116Z -->
+
+## Step-20000 checkpoint, EMA sample, FD smoke, and Inception eval completed
+
+更新时间：`2026-05-28T11:16Z`
+
+结论：`step_00020000` 主产物已经完整产出；PAE B3 b96 主线没有停止，已继续向后训练。
+
+Step-20000 checkpoint:
+
+```text
+checkpoint: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00020000.pt
+created_at_utc: 2026-05-28T11:02:43Z
+latest.pt -> step_00020000.pt
+```
+
+Trainer built-in EMA latent sample:
+
+```json
+{
+  "step": 20000,
+  "sample_status": "ok",
+  "num_samples": 64,
+  "sample_steps": 32,
+  "use_ema": true,
+  "sample_shape": [64, 32, 16, 16],
+  "sample_finite": true,
+  "sample_mean": 0.19003459811210632,
+  "sample_std": 0.9108490347862244,
+  "sample_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00020000/sample_latents.safetensors"
+}
+```
+
+Built-in fast-config FD/JVP smoke at step `20000`:
+
+```json
+{
+  "fd_eps": 0.01,
+  "fd_mode": "fp32",
+  "jvp_mode": "fp32",
+  "fd_rel_err_full_jvp": 0.06927925867689227,
+  "fd_abs_err_norm": 15.122713088989258,
+  "du_norm": 220.61480712890625,
+  "fd_norm": 218.2863006591797,
+  "r_eq_t_count": 75,
+  "r_eq_t_total": 96,
+  "realized_r_eq_t_fraction": 0.78125,
+  "u_finite": true,
+  "du_finite": true,
+  "fd_finite": true,
+  "no_nan_or_inf": true,
+  "target_detached": true,
+  "all_r_eq_t_degenerate_target_minus_v_max_abs": 0.0
+}
+```
+
+Interpretation: this fast-config FD rel (`0.069279`) remains in the previously explained TF32 finite-difference diagnostic-artifact regime. The dedicated step-10000 TF32-off audit already established the fp32 JVP target path correctness; strict FD gates should continue to use TF32 off + fixed non-degenerate small batch + eps sweep.
+
+CPU PAE decode + real ImageNet-256 Inception eval completed:
+
+```json
+{
+  "status": "ok",
+  "elapsed_sec": 36.44545849598944,
+  "num_generated": 64,
+  "num_real": 64,
+  "feature_dim": 2048,
+  "fid": 319.8114004384611,
+  "inception_mmd_rbf": 0.04636890681232764,
+  "inception_kid_poly3": 0.0600598865598263
+}
+```
+
+Image summaries:
+
+```json
+{
+  "generated_mean": 0.48540279269218445,
+  "generated_std": 0.2715531885623932,
+  "generated_channel_mean_rgb": [0.5125942826271057, 0.4890085458755493, 0.4558027684688568],
+  "generated_channel_std_rgb": [0.2644721567630768, 0.26147812604904175, 0.28310543298721313],
+  "real_mean": 0.4458613693714142,
+  "real_std": 0.2769797444343567,
+  "real_channel_mean_rgb": [0.4725829064846039, 0.4556937515735626, 0.4083418548107147],
+  "real_channel_std_rgb": [0.27943283319473267, 0.26707392930984497, 0.27828601002693176]
+}
+```
+
+Caveat: this is a `64` generated / `64` real sample early diagnostic to verify the image-space sample pipeline and monitor training trend; it is **not** a publishable 50k ImageNet FID.
+
+HF artifact upload completed:
+
+```text
+repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+commit: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/ee0884422f792685559a0ca12083fbf3f516d316
+sha: ee0884422f792685559a0ca12083fbf3f516d316
+```
+
+Uploaded step-20000 files:
+
+```text
+b3_meanflow_realdata/fullcache_b96/step_00020000/eval/eval_record.json
+b3_meanflow_realdata/fullcache_b96/step_00020000/eval/sample_latents.safetensors
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/inception_metrics.json
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/inception_metrics.md
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/inception_features.npz
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/decoded_and_real_imagenet256_samples.npz
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/images/generated_grid.png
+b3_meanflow_realdata/fullcache_b96/step_00020000/inception_eval/images/real_imagenet256_grid.png
+```
+
+Current mainline at doc update:
+
+```json
+{
+  "latest_step": 21050,
+  "created_at_utc": "2026-05-28T11:16:48Z",
+  "loss": 0.42084091901779175,
+  "elapsed_sec": 0.7927653328515589,
+  "batch_size": 96
+}
+```
+
+Next: keep the fast H100 b96 mainline running; next natural gates are the next periodic checkpoints/FD smoke and a larger/periodic image-space eval if sample count or schedule is increased.
