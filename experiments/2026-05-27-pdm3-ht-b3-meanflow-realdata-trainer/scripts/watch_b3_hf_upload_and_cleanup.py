@@ -332,8 +332,6 @@ def upload_eval_dir(
     key = step_key(step)
     eval_uploads = state.setdefault("eval_uploads", {})
     prev = eval_uploads.get(key, {})
-    if prev.get("status") == "ok":
-        return True
 
     # Avoid uploading raw real ImageNet PNGs/NPZ arrays.  Generated grids/images,
     # sample latents, and metric JSON/MD files are sufficient for handoff.
@@ -377,8 +375,17 @@ def upload_eval_dir(
     if not files:
         return False
 
+    # Eval folders are populated in stages: the trainer writes sample_latents first,
+    # then the CPU FID watcher writes inception metrics shortly after.  If an
+    # earlier upload saw only the first files, refresh HF once more when the local
+    # allowed file set grows.
+    prev_file_count = int(prev.get("file_count") or 0)
+    if prev.get("status") == "ok" and prev_file_count >= len(files):
+        return True
+
     remote_path = f"{cfg.remote_prefix.rstrip('/')}/step_{step:08d}"
-    log("eval_upload_start", step=step, eval_dir=str(eval_dir), remote_path=remote_path, files=len(files))
+    refresh_from = prev_file_count if prev.get("status") == "ok" else None
+    log("eval_upload_start", step=step, eval_dir=str(eval_dir), remote_path=remote_path, files=len(files), refresh_from_file_count=refresh_from)
     eval_uploads[key] = {
         "status": "running",
         "local_dir": str(eval_dir),
@@ -386,7 +393,7 @@ def upload_eval_dir(
         "file_count": len(files),
         "started_at_utc": utc_now(),
     }
-    append_event(state, {"type": "eval_upload_start", "step": step, "local_dir": str(eval_dir), "remote_path": remote_path, "file_count": len(files)})
+    append_event(state, {"type": "eval_upload_start", "step": step, "local_dir": str(eval_dir), "remote_path": remote_path, "file_count": len(files), "refresh_from_file_count": refresh_from})
     atomic_write_json(state_path, state)
     try:
         commit = api.upload_folder(
@@ -541,8 +548,10 @@ def process_eval_dirs(
         has_sample = (eval_dir / "sample_latents.safetensors").exists()
         if not (has_metrics or has_sample):
             continue
-        if state.get("eval_uploads", {}).get(step_key(step), {}).get("status") == "ok":
-            continue
+        # upload_eval_dir is refresh-aware: eval folders can grow after the first
+        # successful upload (for example compact 64-sample metrics first, then a
+        # later 5k Inception FID anchor).  Always let it compare the allowed file
+        # count instead of skipping all previously-ok steps here.
         upload_eval_dir(api=api, cfg=cfg, state=state, state_path=state_path, eval_dir=eval_dir)
 
 

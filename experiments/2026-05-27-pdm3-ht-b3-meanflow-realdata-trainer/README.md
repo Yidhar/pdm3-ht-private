@@ -114,3 +114,61 @@ The active B3 b96 H100 route is now treated as a long run toward the first PAE-p
 
 Operational caveat: the process already running on 2026-05-28 loaded the old config in memory. The updated `max_steps=1070000`, `checkpoint_every=10000` and `fd_audit_every=10000` become fully active after a controlled restart/resume from `checkpoints/latest.pt` (or after the old run reaches its previous stop and is resumed).
 
+
+<!-- B3_5K_INCEPTION_FID_ANCHOR_20260528 -->
+
+## 5k true Inception FID anchor plan — 2026-05-28
+
+The normal trainer eval intentionally emits only `64` EMA samples every `10k` steps. Those image-space Inception numbers are useful for smoke/trend monitoring, but they have high finite-sample variance and are not comparable to paper-scale FID. At step `50k` or `60k`, run one larger `5,000`-sample Inception pass to establish a more stable early baseline.
+
+Important scope notes:
+
+- This is still a `5k` anchor, not the full publishable `50k` FID commonly reported in papers.
+- Use the current base route only: PAE DINOv2-L d32 cache + LightningDiT B3/XL-like backbone + MeanFlow objective + EMA sampling. Representation Fréchet Loss / FD-loss remains deferred.
+- On the single-H100 machine, CUDA sampling should be done during a short controlled pause at a checkpoint boundary because the live trainer uses most H100 memory.
+- After the latent file is written, training can be resumed and CPU decode/Inception can run in the background if we want to minimize GPU downtime.
+- Do not upload raw real ImageNet images or decoded real-image NPZ payloads. Use `--max-save-images 0 --grid-count 0 --no-save-npz` for the 5k pass unless explicitly requested otherwise.
+
+Recommended 5k recipe after a step checkpoint exists:
+
+```bash
+EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+CFG="$EXP/configs/b3_meanflow_realdata_full_fast_h100_b96.yaml"
+RES="$EXP/results/fullcache_realdata_singleproc_template"
+STEP=50000   # or 60000
+CKPT="$RES/checkpoints/step_$(printf '%08d' "$STEP").pt"
+EVAL="$RES/eval/step_$(printf '%08d' "$STEP")"
+
+# 1) Short GPU step: generate 5k EMA latents from the checkpoint.
+python "$EXP/scripts/sample_b3_meanflow_eval_latents.py" \
+  --config "$CFG" \
+  --checkpoint "$CKPT" \
+  --num-samples 5000 \
+  --sample-batch-size 64 \
+  --sample-steps 32 \
+  --precision-mode bf16_autocast \
+  --seed 2026052850 \
+  --output-latents "$EVAL/sample_latents_5000.safetensors"
+
+# 2) CPU/background step: PAE decode and real ImageNet-256 Inception metrics.
+#    This avoids H100 contention after the trainer is resumed.
+nohup python "$EXP/scripts/decode_and_inception_eval_step.py" \
+  --sample-latents "$EVAL/sample_latents_5000.safetensors" \
+  --output-dir "$EVAL/inception_eval_5k" \
+  --num-real 5000 \
+  --real-seed 20260528 \
+  --decode-device cpu \
+  --decode-batch-size 8 \
+  --inception-device cpu \
+  --inception-batch-size 64 \
+  --torch-num-threads 64 \
+  --max-save-images 0 \
+  --grid-count 0 \
+  --no-save-npz \
+  > "$EVAL/inception_eval_5k.log" 2>&1 &
+```
+
+Decision gate around the existing 64-sample compact/image-space FID trend:
+
+- If the step-50k small eval is `< 307` or basically flat/improving, treat the 30k→40k bump as likely sample-count noise and run the 5k anchor at either `50k` or the next natural `60k` checkpoint.
+- If the step-50k small eval is `> 310` and still rising, run the 5k anchor immediately from the step-50k checkpoint before changing LR; use the 5k number to distinguish true degradation from noisy 64-sample diagnostics.
