@@ -737,3 +737,13 @@ Detailed handoff:
   - kept `step_00020000.pt` for HF upload and `step_00026000.pt` as current latest target.
 - Restarted FID convergence watcher with long-run `STOP_STEP=1070000` and future eval `--no-save-npz`.
 
+
+### 2026-05-28T12:43Z — step-20000 full checkpoint archived to HF
+
+- HF upload completed for the full step-20000 trainer checkpoint:
+  - remote `b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt`
+  - commit `https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/fc5bb486b2a82244728e4cfc2195b6cd4c234772`
+  - sha `fc5bb486b2a82244728e4cfc2195b6cd4c234772`
+- Local `step_00020000.pt` was deleted after upload.
+- Current local checkpoint footprint: one full checkpoint, `latest.pt -> step_00026000.pt` (~11 GiB).
+- Next intended full checkpoint archive: step `30000`.

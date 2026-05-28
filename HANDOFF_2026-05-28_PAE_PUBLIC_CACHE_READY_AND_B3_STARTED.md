@@ -1108,3 +1108,27 @@ Interpretation update:
 - Current `20k`/`30k` FID diagnostics remain early engineering/convergence probes.
 - Do not over-compare them to the original PAE paper regime; the first more meaningful apples-to-apples long-run checkpoint is around `1.07M` steps.
 - Continue the base `PAE latent + LightningDiT B3/XL + MeanFlow objective` run; FD-loss / Representation Fréchet Loss remains deferred.
+
+<!-- B3_B96_STEP20000_CKPT_HF_UPLOAD_DONE_20260528T1243Z -->
+
+### HF checkpoint upload completion update
+
+更新时间：`2026-05-28T12:43Z`
+
+The HF upload/cleanup watcher completed the first full checkpoint archive and cleaned local storage:
+
+```text
+local checkpoint uploaded: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00020000.pt
+remote path: b3_meanflow_realdata/fullcache_b96/checkpoints/step_00020000.pt
+HF commit: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/fc5bb486b2a82244728e4cfc2195b6cd4c234772
+sha: fc5bb486b2a82244728e4cfc2195b6cd4c234772
+```
+
+After upload, the watcher deleted the local `step_00020000.pt`. Current local checkpoint footprint is back to one full checkpoint:
+
+```text
+latest.pt -> step_00026000.pt
+step_00026000.pt  # ~11 GiB, kept for fast local resume
+```
+
+Next intended archive checkpoint is step `30000`.
