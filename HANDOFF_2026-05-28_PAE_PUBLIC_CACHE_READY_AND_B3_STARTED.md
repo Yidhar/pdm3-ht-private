@@ -504,3 +504,29 @@ b96 H100 run 已通过下一个持久化 gate，并继续训练。
 ```
 
 FD audit step 6000 已通过，`no_nan_or_inf=true`，`all_r_eq_t_degenerate_target_minus_v_max_abs=0.0`。`latest.pt` 已指向 `step_00006000.pt`。按 artifact routing 约定，此 checkpoint 没有提交到 GitHub；如需发布模型产物，只上传到：<https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts>。
+
+
+<!-- B3_B96_STEP10000_EVAL_SMOKE_20260528T0842Z -->
+
+## Step 10000 eval/sample pipeline gate complete
+
+更新时间：`2026-05-28T08:44:24Z`
+
+用户要求的 step `10000` 五项已落地：
+
+1. checkpoint: `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/checkpoints/step_00010000.pt`
+2. EMA latent sample: `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00010000/sample_latents.safetensors`，shape `[64, 32, 16, 16]`，finite `True`
+3. image-space decoded samples: generated PNG `64` 张 + real-ref PNG `64` 张；grid:
+   - `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00010000/images/generated_grid.png`
+   - `/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00010000/images/real_ref_grid.png`
+4. compact smoke metrics（非 official Inception FID/KID）:
+   - `compact_fid_rp128=4.0626297`
+   - `compact_mmd_rbf_rp128=0.049283276`
+   - `compact_kid_poly3_rp128=0.0034318871`
+5. train/eval summary: `handoff/STEP10000_EVAL_SUMMARY_2026-05-28.md`
+
+内置 official FID 仍是 `skipped_no_command`，因为 fast config 当前 `eval.fid_command_template` 为空；本次 compact metrics 目标是提前验证 sample→PAE decode→image metrics 线路，避免等到 100k 后才发现 pipeline 未接通。
+
+主训练未中断，当前最后记录：step `10441` @ `2026-05-28T08:44:23Z`，last200 约 `119.135` samples/s（如有）。
+
+FD 风险：step `10000` built-in FD audit finite/no_nan，但 `fd_rel=0.061354188` 仍高于 practical gate `1e-2`；专项 A/B/C eps sweep 脚本已准备好：`experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/audit_fd_jvp_modes.py`。建议等 GPU 空出或在下一个 durable checkpoint 后短暂停训运行，避免与当前 74GB H100 主训抢显存。
