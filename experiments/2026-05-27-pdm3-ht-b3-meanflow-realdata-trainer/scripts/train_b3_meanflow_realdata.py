@@ -322,6 +322,21 @@ def get_rng_state() -> Dict[str, Any]:
     return state
 
 
+def _coerce_rng_byte_tensor(x: Any, *, cpu: bool) -> torch.Tensor:
+    """Return a uint8 RNG state tensor on the requested device.
+
+    Checkpoints are loaded with ``map_location=device`` in the trainer, so the
+    saved CPU RNG ByteTensor can be remapped to CUDA on resume.
+    ``torch.set_rng_state`` requires a CPU ByteTensor; normalize here so
+    checkpoint resume is robust across map_location choices and PyTorch 2.9.
+    """
+    if not torch.is_tensor(x):
+        x = torch.as_tensor(x, dtype=torch.uint8)
+    if x.dtype != torch.uint8:
+        x = x.to(dtype=torch.uint8)
+    return x.cpu() if cpu else x
+
+
 def set_rng_state(state: Dict[str, Any]) -> None:
     if not state:
         return
@@ -330,10 +345,10 @@ def set_rng_state(state: Dict[str, Any]) -> None:
     if "numpy_random" in state:
         np.random.set_state(state["numpy_random"])
     if "torch_cpu" in state:
-        torch.set_rng_state(state["torch_cpu"])
+        torch.set_rng_state(_coerce_rng_byte_tensor(state["torch_cpu"], cpu=True))
     if torch.cuda.is_available() and "torch_cuda_all" in state:
         try:
-            torch.cuda.set_rng_state_all(state["torch_cuda_all"])
+            torch.cuda.set_rng_state_all([_coerce_rng_byte_tensor(s, cpu=False) for s in state["torch_cuda_all"]])
         except Exception:
             pass
 

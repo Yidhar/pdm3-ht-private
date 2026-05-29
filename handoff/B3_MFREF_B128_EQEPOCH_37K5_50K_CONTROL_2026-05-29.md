@@ -246,3 +246,76 @@ tail -f "$LOG"
 4. Let the 50k controller generate the secondary b96-66.7k-equivalent FID.
 5. Let the post-50k controller upload artifacts to HF under `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k`.
 6. In reports/charts, label x-axis as processed samples or equivalent epochs; raw step count is secondary metadata only.
+
+
+## Progress update — 2026-05-29T19:14:37Z
+
+Step **37,500** primary equivalent-epoch anchor has completed. This is the fair sample-equivalent point to old b96 step 50k:
+
+```text
+b128 37,500 × 128 = 4,800,000 samples
+old b96 50,000 × 96 = 4,800,000 samples
+```
+
+### Step 37.5k 5K true Inception FID
+
+Report files:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/inception_eval_5k/inception_metrics.md
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/inception_eval_5k/inception_metrics.json
+```
+
+Metrics, 5,000 generated / 5,000 real, EMA, `sample_steps=32`:
+
+| run | processed samples | equivalent | FID ↓ | MMD ↓ | KID ↓ |
+|---|---:|---:|---:|---:|---:|
+| old b96 step 50k | 4,800,000 | b96 50k | `55.528315` | `0.0328459` | `0.0389490` |
+| new b128 step 37.5k | 4,800,000 | b96 50k | `64.769588` | `0.040049` | `0.050480` |
+
+Interpretation: at the fair early 4.8M-sample anchor, the b128 lr1e-4 cosine/reference-hparam run is currently worse than the old b96 constant-2e-4 control by about **+9.241 FID**. Continue to the secondary b128 step 50k / b96 66.7k-equivalent anchor before making final decision on this route.
+
+Image stats:
+
+| split | mean | std | finite |
+|---|---:|---:|:---:|
+| generated | `0.446426659822464` | `0.2760142982006073` | `True` |
+| real ImageNet256 | `0.45189958810806274` | `0.2797693610191345` | `True` |
+
+### Resume-to-50k incident and fix
+
+The 37.5k controller completed sampling/eval and attempted to resume to 50k, but the first resume process exited immediately with:
+
+```text
+TypeError: RNG state must be a torch.ByteTensor
+```
+
+Failed log:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_resume_to50k_after_37k5_fid_20260529T181348Z.log
+```
+
+Cause: `torch.load(..., map_location=cuda)` remapped the saved CPU RNG ByteTensor to CUDA before `torch.set_rng_state`; PyTorch requires the CPU RNG state on CPU.
+
+Fix applied in both local experiment script and private-sync copy:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py
+/workspace/pdm3-ht-private-sync/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py
+```
+
+The trainer now coerces the saved CPU RNG state back to CPU before restore. `py_compile` passed. Resume-to-50k was relaunched successfully:
+
+```text
+pid: 85230
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_resume_to50k_after_rngfix_20260529T191236Z.log
+latest observed train step: 37597
+latest loss: 0.38400977849960327
+ETA step 50k: 2026-05-29T22:47:48Z UTC, approximate from current speed
+```
+
+Controllers remain active:
+
+- step 50k 5K FID: waiting for `checkpoints/step_00050000.pt`;
+- post-50k HF upload/cleanup: waiting for step-50k `inception_metrics.json`.
