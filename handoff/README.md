@@ -131,4 +131,4 @@ train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-tr
 
 Reference/control comparison target: old b96 constant-`2e-4` step-50k 5K FID `55.528315` vs new b128 lr`1e-4` warmup10k cosine-to-800k step-50k 5K FID TBD.
 
-Post-50k HF upload/cleanup controller PID `75308` is waiting for the new branch 5K Inception metrics, then uploads to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.
+Post-50k HF upload/cleanup controller PID `75434` is waiting for the new branch 5K Inception metrics, then uploads to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.

@@ -241,9 +241,9 @@ new b128 50k: 6.4M sample presentations = 6.25% of that budget
 A second controller waits for the 5K Inception metrics file, then runs the HF artifact watcher once for this reference branch.  It uses the distinct remote prefix `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.  It is intentionally post-metrics so that checkpoint cleanup cannot race the 5K sampler.
 
 ```text
-pid: 75308
+pid: 75434
 script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_post50k_hf_upload_cleanup_20260529T063511Z.sh
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_post50k_hf_upload_cleanup_20260529T063511Z.log
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_post50k_hf_upload_cleanup_20260529T063511Z.setsid.log
 status JSON: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050000/hf_post50k_upload_status.json
 remote prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k
 ```

@@ -336,4 +336,4 @@ train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-tr
 
 Primary decision point: compare the new b128/lr1e-4/cosine step-50k 5K FID against the old b96/constant-2e-4 step-50k 5K FID `55.528315`.
 
-After the 5K metrics are written, post-controller PID `75308` runs one HF upload/cleanup pass to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.
+After the 5K metrics are written, post-controller PID `75434` runs one HF upload/cleanup pass to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.
