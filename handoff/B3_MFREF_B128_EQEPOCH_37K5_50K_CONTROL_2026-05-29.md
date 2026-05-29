@@ -319,3 +319,55 @@ Controllers remain active:
 
 - step 50k 5K FID: waiting for `checkpoints/step_00050000.pt`;
 - post-50k HF upload/cleanup: waiting for step-50k `inception_metrics.json`.
+
+### Midpoint FID slope controller added: b128 22.5k/30k, 32-step NFE=32
+
+User requested intermediate points to distinguish "slow warm-up may overtake" vs "effective LR too low is genuinely worse": new b128 around 20k and 30k with the same 32-step FID口径.
+
+Current retained checkpoints for this b128 run are:
+
+```text
+step_00022500.pt
+step_00030000.pt
+step_00037500.pt
+```
+
+There is no exact `step_00020000.pt` in the local run state, so the controller evaluates the nearest retained early checkpoint `step_00022500.pt` plus exact `step_00030000.pt`. By processed-sample normalization these correspond to:
+
+| b128 step | processed samples | b96-equivalent step |
+|---:|---:|---:|
+| 22,500 | 2,880,000 | 30,000 |
+| 30,000 | 3,840,000 | 40,000 |
+
+To avoid competing with the single H100 while the resumed 37.5k->50k training and the existing 50k FID controller are active, the midpoint controller is gated on the step-50k 5K Inception metrics file. After 50k FID completes, it will run 22.5k then 30k sequentially with the same settings:
+
+```text
+num_generated = 5000
+num_real = 5000
+EMA = true
+sample_steps = 32
+script-level NFE = 32
+precision_mode = bf16_autocast
+real_seed = 20260529
+```
+
+Controller:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_22k5_30k_5k_gpu_fid_after50k_20260529T194245Z.sh
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_22k5_30k_5k_gpu_fid_after50k_20260529T194245Z.setsid.log
+```
+
+Status:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_22k5_30k_after50k_control.json
+```
+
+Expected output metrics:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00022500/inception_eval_5k/inception_metrics.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00030000/inception_eval_5k/inception_metrics.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_22k5_30k_5k_fid_summary.md
+```
