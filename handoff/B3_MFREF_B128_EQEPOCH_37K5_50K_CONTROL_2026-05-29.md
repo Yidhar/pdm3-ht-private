@@ -371,3 +371,137 @@ Expected output metrics:
 /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00030000/inception_eval_5k/inception_metrics.json
 /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_22k5_30k_5k_fid_summary.md
 ```
+
+## 2026-05-29 final update: b128 30k / 37.5k / 50k 5K FID results are complete
+
+The b128 lr1e-4 cosine/reference-hparam line reached step 50k and all currently available requested 5K Inception FID anchors have completed.
+
+All completed rows below use the same evaluation口径:
+
+```text
+5,000 generated / 5,000 real
+EMA = true
+sample_steps = 32
+script-level NFE = 32
+precision_mode = bf16_autocast
+PAE decode
+torchvision InceptionV3 pool-2048 image-space metrics
+```
+
+Important NFE convention: in the current scripts, `sample_steps` is passed as `num_steps` to `sample_meanflow_latents(...)`, and the sampler performs one `transport.call_model(...)` per Euler step. Therefore these are `sample_steps=32` / script-level `NFE=32` results, not 1-NFE results.
+
+### Final metric table
+
+| b128 step | processed samples | b96-equivalent step | status | FID ↓ | MMD RBF ↓ | KID poly3 ↓ | gen/real |
+|---:|---:|---:|---|---:|---:|---:|---:|
+| 22,500 | 2,880,000 | 30,000 | `missing/pruned_before_eval` | `NA` | `NA` | `NA` | `NA` |
+| 30,000 | 3,840,000 | 40,000 | `ok` | `72.256046` | `0.044132` | `0.056897` | `5000/5000` |
+| 37,500 | 4,800,000 | 50,000 | `ok` | `64.769588` | `0.040049` | `0.050480` | `5000/5000` |
+| 50,000 | 6,400,000 | 66,667 | `ok` | `58.183655` | `0.035026` | `0.042753` | `5000/5000` |
+
+Detailed local metric files:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00030000/inception_eval_5k/inception_metrics.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/inception_eval_5k/inception_metrics.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/inception_eval_5k/inception_metrics.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_22k5_30k_5k_fid_summary.md
+```
+
+### Slope / interpretation
+
+The new b128 lr1e-4 cosine/reference-hparam line is **not diverging**. Its FID is monotonically improving:
+
+```text
+30k  -> 37.5k: 72.256046 -> 64.769588  = -7.486458 FID
+37.5k -> 50k: 64.769588 -> 58.183655  = -6.585933 FID
+30k  -> 50k:  72.256046 -> 58.183655  = -14.072391 FID
+```
+
+However, at equal processed samples it is still behind the old b96 constant-2e-4 line:
+
+```text
+old b96 step 50k:       50,000 × 96  = 4,800,000 samples, FID = 55.528315
+new b128 step 37.5k:    37,500 × 128 = 4,800,000 samples, FID = 64.769588
+new - old delta at equal samples: +9.241273 FID worse
+```
+
+At b128 step 50k, the new line has processed 6.4M samples, i.e. b96-equivalent step 66.7k, and reaches FID `58.183655`. This is clearly improving, but still has not reached the old b96 step-50k anchor.
+
+Current conclusion:
+
+```text
+The b128 lr1e-4 cosine/reference-hparam route has a healthy downward FID slope, so the earlier loss uptrend is not sampling-quality collapse by itself. But this route is currently sample-inefficient versus the old b96 constant-2e-4 line at the fair 4.8M-sample anchor. The decisive next comparison is b128 step 75k, which is b96 step-100k equivalent; compare that against old b96 step-100k FID = 47.925749.
+```
+
+### Missing 20k / 22.5k note
+
+The exact requested step-20k checkpoint was never available in this run. Step 22.5k existed earlier, but it was pruned before the midpoint controller evaluated it. Therefore the only retained early midpoint result is step 30k.
+
+Controller status:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_22k5_30k_after50k_control.json
+status: done
+steps_available_evaluated: [30000]
+steps_missing_or_pruned: [20000, 22500]
+```
+
+Future controllers should protect any requested midpoint checkpoints from cleanup, or run the midpoint eval before HF cleanup begins.
+
+### HF artifact upload state
+
+HF artifact repo:
+
+```text
+https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+remote_prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+```
+
+Upload/cleanup completed:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/hf_post50k_upload_status.json
+status: done
+updated_at_utc: 2026-05-29T23:02:23Z
+```
+
+Uploaded artifacts recorded in:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/hf_artifact_upload_state.json
+```
+
+Completed HF commits:
+
+| artifact | HF path | commit |
+|---|---|---|
+| checkpoint step 37.5k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00037500.pt` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/d0ea647b4b680ca15b29ae7c791a3001d1ade936 |
+| checkpoint step 50k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00050000.pt` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/9561c2aa65ff3d517702930e3c628648bcee1dbe |
+| eval step 37.5k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/step_00037500` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/db846081b37dc2fec0a8c196f8dd2bfacbc7d9a1 |
+| eval step 50k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/step_00050000` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/e2b47d23671e43537c6503c221c3d82f08c8f47d |
+
+Local checkpoint state after cleanup:
+
+```text
+step_00030000.pt deleted by cleanup at 2026-05-29T22:57:33Z
+step_00037500.pt uploaded then deleted at 2026-05-29T22:59:59Z
+step_00050000.pt remains local as latest checkpoint at last check, size about 11G
+```
+
+### Recommended next action
+
+If continuing this hyperparameter line, run/evaluate the next decisive anchor:
+
+```text
+b128 step 75,000 == b96 step 100,000 equivalent
+5K generated / 5K real
+EMA
+sample_steps=32 / script-level NFE=32
+```
+
+Compare directly to the old b96 step-100k anchor:
+
+```text
+old b96 step 100k, sample_steps=32, 5K/5K true Inception FID = 47.925749
+```
