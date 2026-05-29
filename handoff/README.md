@@ -1,6 +1,6 @@
 # PDM-3-HT handoff index
 
-更新时间：`2026-05-29T06:30:00+00:00`
+更新时间：`2026-05-29T07:05:00+00:00`
 
 ## 当前有效状态
 
@@ -28,10 +28,10 @@ HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md
 ## 当前 B3 run
 
 ```text
-pid: 74778
+pid: 77429
 config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
 result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_train_20260529T062339Z.log
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_restart_after_multi_nfe_20260529T070105Z.log
 50k 5K controller pid: 75011
 ```
 
@@ -104,6 +104,32 @@ status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-
 final status: cancelled_by_user_for_hparam_control
 ```
 
+
+<!-- B3_STEP100K_MULTI_NFE_FID_POINTER_20260529 -->
+
+## Latest B3 PAE b96 control update — step-100k multi-NFE 5K FID sweep
+
+更新时间：`2026-05-29T07:05Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_STEP100K_MULTI_NFE_FID_2026-05-29.md
+```
+
+User requested NFE `2/4` on the old step-100k checkpoint. Because the existing local 5K anchor metadata was `sample_steps=32` rather than true 1-NFE, the sweep ran `sample_steps/NFE = 1, 2, 4` with the same seed `2026052910`.
+
+| sample_steps/NFE | 5K FID ↓ | MMD ↓ | KID ↓ |
+|---:|---:|---:|---:|
+| `1` | `56.966056` | `0.0344998` | `0.0427200` |
+| `2` | `53.476784` | `0.0309196` | `0.0374734` |
+| `4` | `49.938747` | `0.0277017` | `0.0323653` |
+| `32` existing anchor | `47.925749` | `0.0259518` | `0.0298404` |
+
+Interpretation: NFE helps monotonically; NFE4 is close to but still ~`+2.01` FID worse than the previous 32-step anchor at this 5K diagnostic sample count. Do not label the previous `47.9257` anchor as 1-NFE.
+
+Operational note: the b128 reference-hparam run was temporarily stopped at step `1678` to free GPU for this sweep, then restarted from scratch at `2026-05-29T07:01Z` as PID `77429`; 50k controller PID `75011` remains active.
+
 <!-- B3_MFREF_B128_50K_POINTER_20260529 -->
 
 ## Latest B3 update — MeanFlow reference-hparam b128/lr1e-4 cosine 50k control
@@ -123,9 +149,9 @@ Active route:
 ```text
 config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
 result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
-train PID: 74778
+train PID: 77429
 controller PID: 75011
-train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_train_20260529T062339Z.log
+train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_restart_after_multi_nfe_20260529T070105Z.log
 50k controller log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_50k_5k_gpu_fid_final_20260529T062518Z.log
 ```
 

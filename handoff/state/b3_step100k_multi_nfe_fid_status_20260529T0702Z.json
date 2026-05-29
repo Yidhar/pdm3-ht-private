@@ -1,0 +1,88 @@
+{
+  "checkpoint_step": 100000,
+  "detail": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00100000/multi_nfe_fid_summary.json",
+  "executed_sample_steps": [
+    1,
+    2,
+    4
+  ],
+  "existing_anchor": {
+    "decode_inception_elapsed_sec": 125.38711700728163,
+    "fid": 47.925748666494485,
+    "kid": 0.02984040431452506,
+    "metrics_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00100000/inception_eval_5k/inception_metrics.json",
+    "mmd": 0.02595176471424887,
+    "num_samples": 5000,
+    "sample_elapsed_sec": 324.5592307019979,
+    "sample_meta": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00100000/sample_latents_5000.json",
+    "sample_steps": 32,
+    "seed": 2026052910
+  },
+  "note": "sample_steps is sampler NFE; NFE=1 was added because previous local 5K anchor was sample_steps=32.",
+  "num_samples": 5000,
+  "reference_latest_step_after_restart": {
+    "created_at_utc": "2026-05-29T07:02:50Z",
+    "loss": 1.97134268283844,
+    "optimizer_lr": 8.6e-07,
+    "peak_memory_mb": 74652.00244140625,
+    "step": 86
+  },
+  "reference_trainer_active": true,
+  "reference_trainer_processes": [
+    {
+      "cmd": "python /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py --config /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml",
+      "pgid": 76195,
+      "pid": 77429
+    },
+    {
+      "cmd": "python /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py --config /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml",
+      "pgid": 76195,
+      "pid": 77584
+    },
+    {
+      "cmd": "python /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/scripts/train_b3_meanflow_realdata.py --config /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml",
+      "pgid": 76195,
+      "pid": 77585
+    }
+  ],
+  "requested_nfes": [
+    2,
+    4
+  ],
+  "results_compact": [
+    {
+      "decode_inception_elapsed_sec": 120.13112968811765,
+      "elapsed_sec": 31.087516768835485,
+      "fid": 56.96605626689188,
+      "kid": 0.04272002348840154,
+      "mmd": 0.03449982203769153,
+      "nfe": 1,
+      "sample_finite": true,
+      "sample_steps": 1
+    },
+    {
+      "decode_inception_elapsed_sec": 118.28094403725117,
+      "elapsed_sec": 39.65039088809863,
+      "fid": 53.47678397375779,
+      "kid": 0.03747335398130902,
+      "mmd": 0.030919553701898694,
+      "nfe": 2,
+      "sample_finite": true,
+      "sample_steps": 2
+    },
+    {
+      "decode_inception_elapsed_sec": 113.97701286524534,
+      "elapsed_sec": 54.86125790467486,
+      "fid": 49.93874684403772,
+      "kid": 0.03236527203857964,
+      "mmd": 0.02770172222198064,
+      "nfe": 4,
+      "sample_finite": true,
+      "sample_steps": 4
+    }
+  ],
+  "status": "done",
+  "summary_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00100000/multi_nfe_fid_summary.json",
+  "summary_md": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00100000/multi_nfe_fid_summary.md",
+  "updated_at_utc": "2026-05-29T07:02:51Z"
+}
