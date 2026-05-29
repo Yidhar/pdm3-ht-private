@@ -94,7 +94,7 @@ Important normalization: current `100k @ batch96` is only `9.375%` of the PAE pa
 Action taken: a step `150000` 5K GPU FID anchor controller was launched and is waiting for `step_00150000.pt`.
 
 ```text
-pid: 74002
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.log
+pid: 74230
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T061233Z_setsid.log
 status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
 ```

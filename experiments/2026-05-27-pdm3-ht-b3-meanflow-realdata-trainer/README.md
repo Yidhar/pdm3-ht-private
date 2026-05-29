@@ -293,9 +293,9 @@ So do not compare `100k @ batch96` directly to PAE's `100k @ batch1024` / 80-epo
 Because the step-100k slope is a yellow flag, a step-150k 5K GPU anchor controller was launched:
 
 ```text
-pid: 74002
+pid: 74230
 script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.sh
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.log
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T061233Z_setsid.log
 status: waiting_for_checkpoint
 status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
 ```
