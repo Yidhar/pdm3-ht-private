@@ -235,6 +235,25 @@ PAE 80ep reference: 100k steps * batch1024 = 102.4M sample presentations
 new b128 50k: 6.4M sample presentations = 6.25% of that budget
 ```
 
+
+## Post-50k HF artifact upload / cleanup controller
+
+A second controller waits for the 5K Inception metrics file, then runs the HF artifact watcher once for this reference branch.  It uses the distinct remote prefix `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.  It is intentionally post-metrics so that checkpoint cleanup cannot race the 5K sampler.
+
+```text
+pid: 75308
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_post50k_hf_upload_cleanup_20260529T063511Z.sh
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_post50k_hf_upload_cleanup_20260529T063511Z.log
+status JSON: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050000/hf_post50k_upload_status.json
+remote prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k
+```
+
+Expected behavior after metrics exist:
+
+1. upload the step-50k archive checkpoint to HF under `LAXMAYDAY/pdm3-ht-model-artifacts/b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k/checkpoints/`;
+2. upload allowed eval artifacts, including `sample_latents_5000.safetensors`, metadata, logs, and `inception_metrics.json/md`;
+3. prune non-archive superseded local checkpoints while keeping `latest.pt`/the resume target.
+
 ## Next actions
 
 1. Monitor the active b128 run for OOM/instability; memory is high but fit probe and current run are stable.
