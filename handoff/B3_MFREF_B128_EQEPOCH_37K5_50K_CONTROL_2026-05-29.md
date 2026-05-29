@@ -528,3 +528,144 @@ Local upload state:
 ```text
 /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_hf_upload_state.json
 ```
+
+## 2026-05-29 update: b128 lr1e-4 cosine resumed from 50k to 75k
+
+User requested continuing the current b128 lr1e-4 cosine/reference-hparam line to the fair old-b96-100k-equivalent anchor:
+
+```text
+b128 step 75,000 × 128 = 9,600,000 processed samples
+old b96 step 100,000 × 96 = 9,600,000 processed samples
+```
+
+A new resume config was created and launched:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to75k.yaml
+/workspace/pdm3-ht-private-sync/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to75k.yaml
+```
+
+Config summary:
+
+```text
+exp_name: fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+resume_from: auto
+restore_rng: true
+start checkpoint: checkpoints/latest.pt -> step_00050000.pt
+max_steps: 75000
+global_batch_size: 128
+optimizer.lr: 1e-4
+optimizer.scheduler: cosine
+optimizer.warmup_steps: 10000
+optimizer.decay_end_step: 800000
+checkpoint_every: 12500
+eval.every_steps: 12500
+```
+
+Launch state at start:
+
+```text
+train pid: 89393
+pidfile: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/mfref_b128_eqepoch_75k.pid
+train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_resume_to75k_20260529T231800Z.log
+```
+
+The trainer successfully resumed from step 50k:
+
+```text
+[2026-05-29 23:18:21] resumed checkpoint path=.../checkpoints/latest.pt step=50000 restore_rng=True
+[2026-05-29 23:19:15] step=50050 loss=0.383651 lr=9.94305e-05 ... class_cond=True
+```
+
+Initial runtime observation after launch:
+
+```text
+latest observed metrics: step 50099
+per-step elapsed around 1.0-1.06s
+GPU: H100, about 78.9GB used, 100% util, about 600W observed
+```
+
+### Step-75k FID controller
+
+A waiting controller was launched for the requested fair anchor:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_75k_5k_gpu_fid_20260529T231741Z.sh
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_75k_5k_gpu_fid_20260529T231741Z.setsid.log
+```
+
+Controller PID at launch:
+
+```text
+89391
+```
+
+It waits for:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00075000.pt
+```
+
+Then it waits for the trainer's small step-75k eval to finish / trainer to exit, and runs the requested true FID pass:
+
+```text
+num_generated = 5000
+num_real = 5000
+EMA = true
+sample_steps = 32
+script-level NFE = 32
+precision_mode = bf16_autocast
+sample_batch_size = 64
+seed = 2026052975
+real_seed = 20260529
+```
+
+Expected outputs:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00075000/sample_latents_5000.safetensors
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00075000/sample_latents_5000.json
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00075000/inception_eval_5k/inception_metrics.json
+```
+
+### Step-75k HF upload/cleanup controller
+
+A post-FID HF upload/cleanup controller was also launched:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post75k_hf_upload_cleanup_20260529T231741Z.sh
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post75k_hf_upload_cleanup_20260529T231741Z.setsid.log
+```
+
+Controller PID at launch:
+
+```text
+89392
+```
+
+It waits for step-75k `inception_metrics.json`, then uploads the checkpoint/eval artifacts to:
+
+```text
+repo: LAXMAYDAY/pdm3-ht-model-artifacts
+remote_prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+archive_extra_steps: 75000
+eval_start_step: 75000
+```
+
+It keeps the live latest checkpoint locally by default and prunes superseded non-archive local checkpoints.
+
+### ETA
+
+Based on the observed 50k->75k start speed (~1.0-1.1 sec/step after resume), remaining training from step 50k to 75k is approximately 7.0-7.8 hours, plus final checkpoint/small eval and ~8-12 minutes for the 5K sample+Inception pass.
+
+Approximate expected step-75k FID result time from launch:
+
+```text
+2026-05-30 06:30-07:10 UTC
+```
+
+This will be the decisive equal-processed-samples comparison against:
+
+```text
+old b96 step 100k, sample_steps=32, 5K/5K true Inception FID = 47.925749
+```
