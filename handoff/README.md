@@ -1,14 +1,15 @@
 # PDM-3-HT handoff index
 
-更新时间：`2026-05-29T07:05:00+00:00`
+更新时间：`2026-05-29T07:32:07Z`
 
 ## 当前有效状态
 
-PAE full latent cache 已完成并公开上传；B3 主线已从旧 b96 constant-2e-4 control 切换到 MeanFlow reference-hparam b128/lr1e-4/warmup+cosine 50k 横向对比。
+PAE full latent cache 已完成并公开上传；B3 主线已从旧 b96 constant-2e-4 control 切换到 MeanFlow reference-hparam b128/lr1e-4/warmup+cosine，并且比较口径已修正为 processed-samples / equivalent-epoch。当前 primary anchor 是 b128 step 37.5k（等效 old b96 step 50k），b128 step 50k 仅作为 b96 66.7k-equivalent secondary reference。
 
 优先看：
 
 ```text
+handoff/B3_MFREF_B128_EQEPOCH_37K5_50K_CONTROL_2026-05-29.md
 HANDOFF_2026-05-28_PAE_PUBLIC_CACHE_READY_AND_B3_STARTED.md
 ```
 
@@ -28,11 +29,28 @@ HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md
 ## 当前 B3 run
 
 ```text
-pid: 77429
-config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
-result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_restart_after_multi_nfe_20260529T070105Z.log
-50k 5K controller pid: 75011
+route: MeanFlow reference-hparam b128/lr1e-4 warmup+cosine, equivalent-epoch anchors
+pid: 78353
+primary config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5.yaml
+resume-to-50k config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to50k.yaml
+result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_37k5_train_setsid_20260529T072459Z.log
+primary 37.5k 5K-FID controller pid: 78122
+secondary 50k 5K-FID controller pid: 78123
+post-50k HF upload controller pid: 78124
+```
+
+Primary fair comparison is now:
+
+```text
+old b96 step 50k: 50,000 × 96 = 4.8M samples = 3.746584 epochs, FID 55.528315
+new b128 step 37.5k: 37,500 × 128 = 4.8M samples = 3.746584 epochs, FID TBD
+```
+
+Secondary reference:
+
+```text
+new b128 step 50k = 6.4M samples = 4.995446 epochs = old b96 step 66,667-equivalent
 ```
 
 监控：
@@ -40,12 +58,15 @@ log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/
 ```bash
 cd /workspace/PDM
 EXP=experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
-PID=$(cat "$EXP/mfref_b128_lr1e4_cosine_50k.pid")
+PID=$(cat "$EXP/mfref_b128_eqepoch.pid")
 ps -p "$PID" -o pid,ppid,stat,etime,%cpu,%mem,rss,cmd
 nvidia-smi
-LOG=$(cat "$EXP/results/mfref_b128_lr1e4_cosine_50k_latest.logpath")
+LOG=$(cat "$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_latest.logpath")
 tail -f "$LOG"
-cat "$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050000/5k_anchor_control.json"
+RES="$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k"
+cat "$RES/eval/step_00037500/5k_anchor_control.json"
+cat "$RES/eval/step_00050000/5k_anchor_control.json"
+cat "$RES/eval/step_00050000/hf_post50k_upload_status.json"
 ```
 
 ## 状态 JSON
@@ -54,6 +75,9 @@ cat "$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050
 handoff/state/pae_full_cache_verified_after_hf_upload.json
 handoff/state/pae_public_cache_hf_remote_verified.json
 handoff/state/b3_fullcache_latest_launch.json
+handoff/state/b3_step50000_5k_fid_status_20260528T1838Z.json
+handoff/state/b3_step100k_multi_nfe_fid_status_20260529T0702Z.json
+handoff/state/b3_mfref_b128_eqepoch_37k5_50k_status_20260529T0730Z.json
 ```
 
 <!-- B3_H100_SPEEDUP_LATEST -->
@@ -130,9 +154,34 @@ Interpretation: NFE helps monotonically; NFE4 is close to but still ~`+2.01` FID
 
 Operational note: the b128 reference-hparam run was temporarily stopped at step `1678` to free GPU for this sweep, then restarted from scratch at `2026-05-29T07:01Z` as PID `77429`; 50k controller PID `75011` remains active.
 
+
+<!-- B3_MFREF_B128_EQEPOCH_POINTER_20260529 -->
+
+## Latest B3 update — MeanFlow b128/lr1e-4 cosine equivalent-epoch control
+
+更新时间：`2026-05-29T07:32:07Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_MFREF_B128_EQEPOCH_37K5_50K_CONTROL_2026-05-29.md
+```
+
+Decision: raw step-count comparison was corrected.  The primary fair comparison is old b96 step `50k` (`4.8M` samples, FID `55.528315`) vs new b128 step **`37.5k`** (`4.8M` samples).  New b128 step `50k` remains useful, but it is **old b96 step `66.7k` equivalent**, not old b96 50k equivalent.
+
+Active route:
+
+```text
+result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+train PID: 78353
+primary 37.5k controller PID: 78122
+secondary 50k controller PID: 78123
+HF remote prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+```
+
 <!-- B3_MFREF_B128_50K_POINTER_20260529 -->
 
-## Latest B3 update — MeanFlow reference-hparam b128/lr1e-4 cosine 50k control
+## Historical/superseded B3 update — MeanFlow reference-hparam b128/lr1e-4 cosine raw-step 50k control
 
 更新时间：`2026-05-29T06:30Z`
 
@@ -142,9 +191,11 @@ Detailed handoff:
 handoff/B3_MFREF_B128_LR1E4_COSINE_50K_CONTROL_2026-05-29.md
 ```
 
+Superseded note: this raw-step 50k branch was cancelled after the equivalent-epoch correction.  See `handoff/B3_MFREF_B128_EQEPOCH_37K5_50K_CONTROL_2026-05-29.md` for the active route.
+
 Decision: the old b96 constant-`2e-4` run is now an engineering/control baseline, not the primary fair evaluation route, because it is not aligned with the external MeanFlow reference hparams. It was stopped at step `103354`; the old step-150k anchor was cancelled.
 
-Active route:
+Historical raw-step route (no longer active):
 
 ```text
 config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
@@ -155,6 +206,4 @@ train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-tr
 50k controller log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_50k_5k_gpu_fid_final_20260529T062518Z.log
 ```
 
-Reference/control comparison target: old b96 constant-`2e-4` step-50k 5K FID `55.528315` vs new b128 lr`1e-4` warmup10k cosine-to-800k step-50k 5K FID TBD.
-
-Post-50k HF upload/cleanup controller PID `75434` is waiting for the new branch 5K Inception metrics, then uploads to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.
+Original raw-step comparison target is superseded.  Do not use b128 raw step-50k as the primary old-b96-50k comparison; use b128 step 37.5k from the eqepoch branch instead.  The old raw-step controllers were cancelled/marked superseded.

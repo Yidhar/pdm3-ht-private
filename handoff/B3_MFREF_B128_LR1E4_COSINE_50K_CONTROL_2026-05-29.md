@@ -1,3 +1,5 @@
+> **SUPERSEDED — 2026-05-29T07:32:07Z:** this raw-step b128 50k control was cancelled after correcting the comparison axis.  b128 step 50k processes 6.4M samples and is equivalent to old b96 step 66.7k, not old b96 step 50k.  Active handoff: [`B3_MFREF_B128_EQEPOCH_37K5_50K_CONTROL_2026-05-29.md`](./B3_MFREF_B128_EQEPOCH_37K5_50K_CONTROL_2026-05-29.md).  Primary fair anchor is now b128 step 37.5k.
+
 # B3 MeanFlow reference-hparam 50k control — 2026-05-29
 
 更新时间：`2026-05-29T06:30Z`

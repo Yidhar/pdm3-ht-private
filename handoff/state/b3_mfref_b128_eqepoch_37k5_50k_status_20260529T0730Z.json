@@ -1,0 +1,155 @@
+{
+  "updated_at_utc": "2026-05-29T07:32:07Z",
+  "decision": "Switched b128 control from raw-step comparison to processed-samples/equivalent-epoch comparison.",
+  "dataset_samples": 1281167,
+  "formula": {
+    "processed_samples": "steps * global_batch_size",
+    "equivalent_epochs": "processed_samples / 1281167",
+    "b96_to_b128_steps": "b96_steps * 96 / 128 = b96_steps * 0.75",
+    "b128_to_b96_steps": "b128_steps * 128 / 96 = b128_steps * 1.3333333333"
+  },
+  "anchors": {
+    "old_b96_50k": {
+      "batch": 96,
+      "steps": 50000,
+      "samples": 4800000,
+      "epochs": 3.7465841689647017
+    },
+    "new_b128_37k5": {
+      "batch": 128,
+      "steps": 37500,
+      "samples": 4800000,
+      "epochs": 3.7465841689647017
+    },
+    "new_b128_50k": {
+      "batch": 128,
+      "steps": 50000,
+      "samples": 6400000,
+      "epochs": 4.995445558619602
+    },
+    "old_b96_100k": {
+      "batch": 96,
+      "steps": 100000,
+      "samples": 9600000,
+      "epochs": 7.493168337929403
+    },
+    "new_b128_75k": {
+      "batch": 128,
+      "steps": 75000,
+      "samples": 9600000,
+      "epochs": 7.493168337929403
+    },
+    "old_b96_1070k": {
+      "batch": 96,
+      "steps": 1070000,
+      "samples": 102720000,
+      "epochs": 80.17690121584462
+    },
+    "meanflow_ref_b128_800k": {
+      "batch": 128,
+      "steps": 800000,
+      "samples": 102400000,
+      "epochs": 79.92712893791364
+    }
+  },
+  "primary_fair_comparison": {
+    "old_b96_step": 50000,
+    "old_b96_samples": 4800000,
+    "old_b96_epochs": 3.7465841689647017,
+    "new_b128_step": 37500,
+    "new_b128_samples": 4800000,
+    "new_b128_epochs": 3.7465841689647017
+  },
+  "secondary_reference": {
+    "new_b128_step": 50000,
+    "equivalent_b96_step": 66666.66666666667,
+    "samples": 6400000,
+    "epochs": 4.995445558619602
+  },
+  "active_run": {
+    "result": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k",
+    "primary_config": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5.yaml",
+    "resume_to_50k_config": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to50k.yaml",
+    "pid_file": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/mfref_b128_eqepoch.pid",
+    "train_pid": "78353",
+    "latest_train_log_path_file": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_latest.logpath",
+    "latest_train_log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_37k5_train_setsid_20260529T072459Z.log",
+    "launch_status": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/launch_status.json"
+  },
+  "latest_train_metric": {
+    "step": 398,
+    "created_at_utc": "2026-05-29T07:32:06Z",
+    "loss": 1.3236348628997803,
+    "optimizer_lr": 3.98e-06,
+    "optimizer_lr_schedule": "cosine",
+    "peak_memory_mb": 74652.00244140625,
+    "grad_is_finite": true,
+    "loss_finite": true
+  },
+  "recent_100_loss_mean": 1.4483050632476806,
+  "controllers": {
+    "step_37500_5k_fid_then_resume": {
+      "script": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_37k5_5k_gpu_fid_then_resume_20260529T072317Z.sh",
+      "pid_file": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_37k5_5k_gpu_fid_then_resume_20260529T072317Z.setsid.pid",
+      "pid": "78122",
+      "status_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/5k_anchor_control.json",
+      "status": {
+        "updated_at_utc": "2026-05-29T07:23:26Z",
+        "status": "waiting_for_checkpoint",
+        "detail": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00037500.pt",
+        "step": 37500,
+        "equivalent_b96_step": 50000,
+        "num_samples": 5000,
+        "sample_latents": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/sample_latents_5000.safetensors",
+        "inception_eval_dir": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/inception_eval_5k",
+        "controller": "mfref_b128_eqepoch_37k5_gpu_fid_then_resume_to50k"
+      }
+    },
+    "step_50000_5k_fid_final": {
+      "script": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_50k_5k_gpu_fid_final_20260529T072317Z.sh",
+      "pid_file": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_50k_5k_gpu_fid_final_20260529T072317Z.setsid.pid",
+      "pid": "78123",
+      "status_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/5k_anchor_control.json",
+      "status": {
+        "updated_at_utc": "2026-05-29T07:23:26Z",
+        "status": "waiting_for_checkpoint",
+        "detail": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00050000.pt",
+        "step": 50000,
+        "equivalent_b96_step": 66667,
+        "num_samples": 5000,
+        "sample_latents": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/sample_latents_5000.safetensors",
+        "inception_eval_dir": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/inception_eval_5k",
+        "controller": "mfref_b128_eqepoch_50k_gpu_fid_final_no_resume"
+      }
+    },
+    "post50k_hf_upload_cleanup": {
+      "script": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post50k_hf_upload_cleanup_20260529T072317Z.sh",
+      "pid_file": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post50k_hf_upload_cleanup_20260529T072317Z.setsid.pid",
+      "pid": "78124",
+      "status_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/hf_post50k_upload_status.json",
+      "status": {
+        "updated_at_utc": "2026-05-29T07:23:26Z",
+        "status": "waiting_for_inception_metrics",
+        "detail": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/inception_eval_5k/inception_metrics.json",
+        "step": 50000,
+        "also_upload_eval_from_step": 37500,
+        "metrics": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00050000/inception_eval_5k/inception_metrics.json",
+        "remote_prefix": "b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k"
+      }
+    }
+  },
+  "old_step_count_aligned_run": {
+    "status": "superseded_cancelled_before_first_checkpoint",
+    "result": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k",
+    "config": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml",
+    "old_train_pid": "77429",
+    "old_controller_pids": [
+      "75011",
+      "75434"
+    ]
+  },
+  "hf_target": {
+    "repo": "LAXMAYDAY/pdm3-ht-model-artifacts",
+    "remote_prefix": "b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k"
+  }
+}
