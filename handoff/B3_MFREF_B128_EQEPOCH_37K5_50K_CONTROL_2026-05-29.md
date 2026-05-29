@@ -266,7 +266,7 @@ Report files:
 /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00037500/inception_eval_5k/inception_metrics.json
 ```
 
-Metrics, 5,000 generated / 5,000 real, EMA, `sample_steps=32`:
+Metrics, 5,000 generated / 5,000 real, EMA, `sample_steps=32` (**script-level NFE=32; one `transport.call_model(...)` per Euler step in `sample_meanflow_latents`; this is not a 1-NFE result**):
 
 | run | processed samples | equivalent | FID ↓ | MMD ↓ | KID ↓ |
 |---|---:|---:|---:|---:|---:|
