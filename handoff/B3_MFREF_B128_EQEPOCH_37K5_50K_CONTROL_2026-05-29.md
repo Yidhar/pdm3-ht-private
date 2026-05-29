@@ -505,3 +505,26 @@ Compare directly to the old b96 step-100k anchor:
 ```text
 old b96 step 100k, sample_steps=32, 5K/5K true Inception FID = 47.925749
 ```
+
+### Additional HF upload: step 30k midpoint eval artifacts
+
+After the final summary, the retained step-30k midpoint evaluation artifacts were uploaded manually to the same HF artifact repo/prefix. The step-30k checkpoint itself had already been deleted by cleanup, but the 5K sample/eval artifacts are now centralized on HF.
+
+```text
+repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+path: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/step_00030000
+url:  https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/tree/main/b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/step_00030000
+```
+
+Midpoint summary/control were also uploaded:
+
+```text
+https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/blob/main/b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/midpoint_22k5_30k_5k_fid_summary.md
+https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/blob/main/b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/midpoint_22k5_30k_after50k_control.json
+```
+
+Local upload state:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/midpoint_hf_upload_state.json
+```
