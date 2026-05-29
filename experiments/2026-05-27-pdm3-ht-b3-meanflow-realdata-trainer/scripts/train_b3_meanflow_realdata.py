@@ -434,6 +434,71 @@ def load_checkpoint(
     return step
 
 
+def lr_schedule_type(opt_cfg: Dict[str, Any]) -> str:
+    """Return the configured LR schedule type while supporting old flat configs."""
+    sched_cfg = opt_cfg.get("scheduler", {})
+    if isinstance(sched_cfg, dict):
+        return str(sched_cfg.get("type", sched_cfg.get("name", opt_cfg.get("lr_schedule", "constant")))).lower()
+    if sched_cfg:
+        return str(sched_cfg).lower()
+    return str(opt_cfg.get("lr_schedule", "constant")).lower()
+
+
+def lr_for_step(opt_cfg: Dict[str, Any], *, step: int, max_steps: int) -> float:
+    """Step-indexed LR scheduler.
+
+    Backward compatible default is constant ``optimizer.lr``.  Cosine configs can
+    be specified either as the older flat fragment:
+
+        optimizer:
+          lr: 0.000075
+          min_lr: 0.0000075
+          scheduler: cosine
+          warmup_steps: 13333
+          decay_end_step: 1070000
+
+    or as a nested schedule:
+
+        optimizer:
+          lr: 0.000075
+          scheduler:
+            type: cosine
+            min_lr: 0.0000075
+            warmup_steps: 13333
+            end_step: 1070000
+    """
+    base_lr = float(opt_cfg.get("lr", opt_cfg.get("base_lr", 1e-4)))
+    sched_type = lr_schedule_type(opt_cfg)
+    if sched_type in {"", "none", "constant", "null"}:
+        return base_lr
+    if sched_type not in {"cosine", "warmup_cosine", "cosine_warmup"}:
+        raise ValueError(f"unsupported optimizer scheduler={sched_type!r}")
+
+    sched_cfg = opt_cfg.get("scheduler", {})
+    if not isinstance(sched_cfg, dict):
+        sched_cfg = {}
+    min_lr = float(sched_cfg.get("min_lr", opt_cfg.get("min_lr", 0.0)))
+    warmup_steps = int(sched_cfg.get("warmup_steps", opt_cfg.get("warmup_steps", 0)))
+    end_step = int(
+        sched_cfg.get(
+            "end_step",
+            sched_cfg.get("decay_end_step", opt_cfg.get("decay_end_step", max_steps)),
+        )
+    )
+    step_i = max(0, int(step))
+    if warmup_steps > 0 and step_i < warmup_steps:
+        return base_lr * float(step_i) / float(max(1, warmup_steps))
+    decay_start = max(0, warmup_steps)
+    decay_end = max(decay_start + 1, end_step)
+    progress = min(1.0, max(0.0, float(step_i - decay_start) / float(decay_end - decay_start)))
+    return min_lr + 0.5 * (base_lr - min_lr) * (1.0 + math.cos(math.pi * progress))
+
+
+def set_optimizer_lr(optimizer: torch.optim.Optimizer, lr: float) -> None:
+    for group in optimizer.param_groups:
+        group["lr"] = float(lr)
+
+
 @torch.no_grad()
 def sample_meanflow_latents(
     *,
@@ -877,6 +942,15 @@ def main() -> None:
     eval_every = int(eval_cfg.get("every_steps", 0)) if bool(eval_cfg.get("enabled", False)) else 0
     grad_clip = float(opt_cfg.get("max_grad_norm", train_cfg.get("grad_clip", 1.0)))
     ckpt_dir = output_dir / "checkpoints"
+    sched_type = lr_schedule_type(opt_cfg)
+    logger.info(
+        "optimizer lr=%s scheduler=%s min_lr=%s warmup_steps=%s decay_end_step=%s",
+        opt_cfg.get("lr", 1e-4),
+        sched_type,
+        opt_cfg.get("min_lr", opt_cfg.get("scheduler", {}).get("min_lr") if isinstance(opt_cfg.get("scheduler", {}), dict) else None),
+        opt_cfg.get("warmup_steps", opt_cfg.get("scheduler", {}).get("warmup_steps") if isinstance(opt_cfg.get("scheduler", {}), dict) else None),
+        opt_cfg.get("decay_end_step", opt_cfg.get("scheduler", {}).get("end_step") if isinstance(opt_cfg.get("scheduler", {}), dict) else None),
+    )
 
     steps: List[Dict[str, Any]] = []
     fd_audits: List[Dict[str, Any]] = []
@@ -890,6 +964,8 @@ def main() -> None:
         logger.warning("start_step=%d >= max_steps=%d; no training iterations will run", start_step, max_steps)
 
     for step in range(start_step + 1, max_steps + 1):
+        current_lr = lr_for_step(opt_cfg, step=step, max_steps=max_steps)
+        set_optimizer_lr(opt, current_lr)
         x, y = next(data_iter)
         x = x.to(device=device, dtype=torch.float32, non_blocking=True)
         y = y.to(device=device, non_blocking=True).long()
@@ -900,6 +976,8 @@ def main() -> None:
             "step": int(step),
             "created_at_utc": now_utc(),
             "batch_size": int(x.shape[0]),
+            "optimizer_lr": float(current_lr),
+            "optimizer_lr_schedule": sched_type,
             "label_min": int(y.min().item()),
             "label_max": int(y.max().item()),
             "label_unique_count": int(torch.unique(y).numel()),
@@ -951,9 +1029,10 @@ def main() -> None:
 
         if step % log_every == 0:
             logger.info(
-                "step=%d loss=%.6g labels=[%s,%s] uniq=%s rt=%.3f targetMB=%s fwdMB=%s bwdMB=%s grad=%.6g class_cond=%s",
+                "step=%d loss=%.6g lr=%.6g labels=[%s,%s] uniq=%s rt=%.3f targetMB=%s fwdMB=%s bwdMB=%s grad=%.6g class_cond=%s",
                 step,
                 rec.get("loss", float("nan")),
+                rec.get("optimizer_lr", float("nan")),
                 rec.get("label_min"),
                 rec.get("label_max"),
                 rec.get("label_unique_count"),

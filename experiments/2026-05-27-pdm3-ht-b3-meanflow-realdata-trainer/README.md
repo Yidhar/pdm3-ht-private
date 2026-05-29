@@ -290,17 +290,48 @@ first comparable point ≈ 100000 × 1024 / 96 = 1,066,667 current steps
 
 So do not compare `100k @ batch96` directly to PAE's `100k @ batch1024` / 80-epoch result.
 
-Because the step-100k slope is a yellow flag, a step-150k 5K GPU anchor controller was launched:
+Because the step-100k slope was a yellow flag, a step-150k 5K GPU anchor controller was launched historically, then cancelled when the reference-hparam 50k branch became the active decision route:
 
 ```text
 pid: 74230
 script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.sh
 log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T061233Z_setsid.log
-status: waiting_for_checkpoint
+status: cancelled_by_user_for_hparam_control
 status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
 ```
 
-Decision gate:
+Decision gate superseded: do not wait for step-150k on the old constant-`2e-4` run unless explicitly requested. The active decision gate is the b128/lr1e-4/warmup+cosine step-50k 5K FID control below.
+<!-- B3_MFREF_B128_50K_CONTROL_20260529 -->
 
-- If step-150k improves by several FID points, keep the current constant-`2e-4` run as the main control.
-- If step-150k is flat/worse, branch from a saved checkpoint and test a lower/cosine LR schedule and/or sampler sensitivity sweep (`32` vs `64/128` steps, plus CFG scale/interval if supported) rather than hot-changing the live run without a control.
+## MeanFlow reference-hparam 50k control — 2026-05-29
+
+The previous long-run b96 route (`fullcache_realdata_singleproc_template`, constant LR `2e-4`) is now frozen as an engineering/control baseline, not the primary fair evaluation route. It was stopped at step `103354` after producing exact 5K true-Inception anchors at step 50k (`FID=55.528315`) and step 100k (`FID=47.925749`).
+
+The active paper/reference-hparam control is:
+
+```text
+config: configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
+exp_name: fullcache_realdata_mfref_b128_lr1e4_cosine_50k
+batch: 128
+optimizer: Adam beta1=0.9 beta2=0.95 weight_decay=0.0
+LR: 1e-4 base, 1e-5 min, warmup 10000 steps, cosine decay end 800000
+max_steps: 50000
+checkpoint_every: 10000
+normal eval: 64 EMA samples every 10000 steps
+external anchor: 5000 EMA samples + GPU PAE decode + true Inception metrics at step 50000
+```
+
+A batch-128 fit probe completed successfully on the H100 80GB with peak memory around `74.65 GiB` from trainer metrics; live `nvidia-smi` memory is around `77.6 GiB`, so the exact-reference run is close to the memory ceiling but stable so far.
+
+The trainer now supports warmup/cosine LR scheduling and logs `optimizer_lr` / `optimizer_lr_schedule` in `metrics.jsonl`. Constant-LR configs remain backward compatible.
+
+Active paths:
+
+```text
+result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
+pid file: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/mfref_b128_lr1e4_cosine_50k.pid
+train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_train_20260529T062339Z.log
+50k controller status: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050000/5k_anchor_control.json
+```
+
+Primary decision point: compare the new b128/lr1e-4/cosine step-50k 5K FID against the old b96/constant-2e-4 step-50k 5K FID `55.528315`.

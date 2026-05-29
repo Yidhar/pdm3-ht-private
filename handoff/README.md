@@ -1,10 +1,10 @@
 # PDM-3-HT handoff index
 
-更新时间：`2026-05-29T06:15:00+00:00`
+更新时间：`2026-05-29T06:30:00+00:00`
 
 ## 当前有效状态
 
-PAE full latent cache 已完成并公开上传；B3 full-cache run 已启动。
+PAE full latent cache 已完成并公开上传；B3 主线已从旧 b96 constant-2e-4 control 切换到 MeanFlow reference-hparam b128/lr1e-4/warmup+cosine 50k 横向对比。
 
 优先看：
 
@@ -28,20 +28,24 @@ HANDOFF_2026-05-28_PDM3_HT_PRIVATE_HF_AND_PAE_PARALLEL.md
 ## 当前 B3 run
 
 ```text
-pid: 31771
-config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_full.yaml
-log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/fullcache_realdata_20260528T062419Z.log
+pid: 74778
+config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
+result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_train_20260529T062339Z.log
+50k 5K controller pid: 75011
 ```
 
 监控：
 
 ```bash
 cd /workspace/PDM
-PID=$(cat experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/fullcache_realdata.pid)
+EXP=experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+PID=$(cat "$EXP/mfref_b128_lr1e4_cosine_50k.pid")
 ps -p "$PID" -o pid,ppid,stat,etime,%cpu,%mem,rss,cmd
 nvidia-smi
-LOG=$(cat experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_latest.logpath)
+LOG=$(cat "$EXP/results/mfref_b128_lr1e4_cosine_50k_latest.logpath")
 tail -f "$LOG"
+cat "$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k/eval/step_00050000/5k_anchor_control.json"
 ```
 
 ## 状态 JSON
@@ -91,10 +95,38 @@ Key result: step `100000` exact 5K true Inception anchor completed with **FID `4
 
 Important normalization: current `100k @ batch96` is only `9.375%` of the PAE paper's `100k @ batch1024` / 80-epoch sample budget, roughly `7.5` PAE-paper-equivalent epochs. The first sample-budget-comparable point is still around `1.07M` current steps.
 
-Action taken: a step `150000` 5K GPU FID anchor controller was launched and is waiting for `step_00150000.pt`.
+Historical action: a step `150000` 5K GPU FID anchor controller had been launched, but it was cancelled after the user requested the reference-hparam 50k control branch.
 
 ```text
 pid: 74230
 log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T061233Z_setsid.log
 status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
+final status: cancelled_by_user_for_hparam_control
 ```
+
+<!-- B3_MFREF_B128_50K_POINTER_20260529 -->
+
+## Latest B3 update — MeanFlow reference-hparam b128/lr1e-4 cosine 50k control
+
+更新时间：`2026-05-29T06:30Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_MFREF_B128_LR1E4_COSINE_50K_CONTROL_2026-05-29.md
+```
+
+Decision: the old b96 constant-`2e-4` run is now an engineering/control baseline, not the primary fair evaluation route, because it is not aligned with the external MeanFlow reference hparams. It was stopped at step `103354`; the old step-150k anchor was cancelled.
+
+Active route:
+
+```text
+config: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml
+result: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_50k
+train PID: 74778
+controller PID: 75011
+train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_lr1e4_cosine_50k_train_20260529T062339Z.log
+50k controller log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_50k_5k_gpu_fid_final_20260529T062518Z.log
+```
+
+Reference/control comparison target: old b96 constant-`2e-4` step-50k 5K FID `55.528315` vs new b128 lr`1e-4` warmup10k cosine-to-800k step-50k 5K FID TBD.

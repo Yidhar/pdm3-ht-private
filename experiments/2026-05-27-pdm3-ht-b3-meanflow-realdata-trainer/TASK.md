@@ -82,7 +82,7 @@ Later LR plan:
 - Step `50000` exact 5K anchor was **FID `55.52831543442829`**, so 50k → 100k improved by `-7.6025667679338085` FID (`-13.69%`).
 - Interpretation is yellow-flag: improving, not collapsed, but absolute FID and slope are not yet reassuring.
 - Do not directly compare current `100k @ batch96` against PAE paper `100k @ batch1024` / 80ep. Current 100k has only `96/1024 = 9.375%` of that sample budget, roughly `7.5` PAE-paper-equivalent epochs.
-- A step `150000` 5K GPU FID anchor controller is running and waiting for `step_00150000.pt`.
+- A step `150000` 5K GPU FID anchor controller had been launched historically but is now cancelled because the active decision route is the reference-hparam 50k control.
 
 ```text
 controller PID: 74230
@@ -90,7 +90,29 @@ log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/
 status: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
 ```
 
-Next gate:
+Superseded old gate:
 
-- If step-150k FID improves by several points, continue the current constant-`2e-4` run as the main control.
-- If step-150k is flat/worse, branch from step-100k/150k and test lower/cosine LR and sampler sensitivity before declaring the base route failed.
+- Do not use step-150k on the old constant-`2e-4` run as the next primary gate unless explicitly requested.
+- Active next gate is the b128/lr1e-4/warmup+cosine step-50k 5K FID control below.
+<!-- B3_MFREF_B128_50K_CONTROL_TASK_20260529 -->
+
+## Status update — MeanFlow reference-hparam 50k control
+
+User decision on 2026-05-29: because the old run did not match the external MeanFlow reference hparams, it should not be the primary fair evaluation metric. Stop it while additional cost is small, launch a paper/reference-hparam route, and compare at 50k steps.
+
+Done:
+
+- Stopped old b96 constant-`2e-4` run at step `103354`; retained it as a control/diagnostic route.
+- Cancelled the old step-150k anchor.
+- Added trainer LR scheduler support: constant/default and warmup+cosine; logs current LR per step.
+- Added exact/reference control config: `b3_meanflow_realdata_mfref_b128_lr1e4_cosine_50k.yaml`.
+- Added b96 batch-scaled fallback config: `b3_meanflow_realdata_mfref_b96_lr7p5em5_cosine_50k.yaml`.
+- Passed a b128 fit probe on H100 80GB.
+- Started active b128/lr1e-4/warmup10k/cosine-to-800k run toward step `50000`.
+- Started one-shot step-50k 5K GPU FID controller for the active reference run.
+
+Open next gate:
+
+- Wait for step `50000` checkpoint and 5K true-Inception metrics.
+- Compare against old control step-50k FID `55.528315`.
+- If the reference-hparam run is clearly better, adopt it as main and plan 100k/200k continuation; if worse, decide between continuing reference run beyond warmup, sample-budget-matched anchor, or b96 batch-scaled fallback.
