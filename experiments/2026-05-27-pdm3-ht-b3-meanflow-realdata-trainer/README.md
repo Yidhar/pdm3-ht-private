@@ -258,3 +258,49 @@ else:
 Schedule values: `50k -> 7.480e-5`, `100k -> 7.389e-5`, `400k -> 5.505e-5`, `800k -> 1.780e-5`, `1.07M -> 7.500e-6`.
 
 For the already-running `2e-4` run, do not rewarm. If switching this run, resume at a natural checkpoint and explicitly override optimizer param-group LR after checkpoint load (`scheduler_over_checkpoint`), optionally ramping down from `2e-4` to the cosine target over `2k–5k` steps. Given the healthy step-50k 5K FID (`55.53`), this is a planned later control knob rather than an emergency hot change.
+
+<!-- B3_STEP100000_5K_FID_AND_150K_ANCHOR_20260529 -->
+
+## Actual step-100k 5K true Inception FID anchor and slope status — 2026-05-29
+
+The exact step-100k checkpoint was evaluated with the same `5000` generated / `5000` real true Inception protocol used at step-50k.
+
+| step | generated / real | FID ↓ | Inception RBF MMD ↓ | Inception poly3 KID ↓ |
+|---:|---:|---:|---:|---:|
+| `50000` | `5000 / 5000` | `55.52831543442829` | `0.032845868596164784` | `0.03894902108381171` |
+| `100000` | `5000 / 5000` | `47.925748666494485` | `0.02595176471424887` | `0.02984040431452506` |
+
+Step-50k → step-100k improved by `-7.6025667679338085` FID, or `-13.691333346698498%`.
+
+Interpretation:
+
+- This is not a collapse signal: the true 5K anchor improved.
+- It is also not a full green light: the absolute FID is still high and the slope is shallow enough to justify denser anchors and/or a controlled LR/sampler branch if the next anchor stalls.
+- The normal trainer 64-sample FID remains smoke only.
+
+Important sample-budget normalization:
+
+```text
+PAE paper 80ep point: 100000 steps × batch1024 = 102.4M image presentations
+current run step-100k: 100000 steps × batch96 = 9.6M image presentations
+current / PAE sample budget: 96 / 1024 = 9.375%
+current step-100k ≈ PAE-paper-equivalent step 9375 ≈ 7.5 epochs
+first comparable point ≈ 100000 × 1024 / 96 = 1,066,667 current steps
+```
+
+So do not compare `100k @ batch96` directly to PAE's `100k @ batch1024` / 80-epoch result.
+
+Because the step-100k slope is a yellow flag, a step-150k 5K GPU anchor controller was launched:
+
+```text
+pid: 74002
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.sh
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.log
+status: waiting_for_checkpoint
+status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
+```
+
+Decision gate:
+
+- If step-150k improves by several FID points, keep the current constant-`2e-4` run as the main control.
+- If step-150k is flat/worse, branch from a saved checkpoint and test a lower/cosine LR schedule and/or sampler sensitivity sweep (`32` vs `64/128` steps, plus CFG scale/interval if supported) rather than hot-changing the live run without a control.

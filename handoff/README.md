@@ -1,6 +1,6 @@
 # PDM-3-HT handoff index
 
-更新时间：`2026-05-28T06:25:31+00:00`
+更新时间：`2026-05-29T06:15:00+00:00`
 
 ## 当前有效状态
 
@@ -74,3 +74,27 @@ handoff/B3_STEP50000_5K_FID_AND_COSINE_PLAN_2026-05-28.md
 ```
 
 Key result: exact `step_00050000` checkpoint, `5000` generated / `5000` real true Inception pass, **FID `55.528315`**, RBF MMD `0.0328459`, poly3 KID `0.0389490`. Normal `64`-sample FID is smoke only. Training resumed from `latest.pt -> step_00052000.pt`; step-50k artifacts were uploaded to HF commit `019298e6dee68c5b2963015e60eb5b5a8210e194` under `LAXMAYDAY/pdm3-ht-model-artifacts/b3_meanflow_realdata/fullcache_b96/step_00050000`.
+
+<!-- B3_STEP100000_5K_FID_POINTER_20260529 -->
+
+## Latest B3 PAE b96 update — step-100k 5K FID and 150k anchor
+
+更新时间：`2026-05-29T06:15Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_STEP100000_5K_FID_AND_150K_ANCHOR_2026-05-29.md
+```
+
+Key result: step `100000` exact 5K true Inception anchor completed with **FID `47.925749`**, RBF MMD `0.0259518`, poly3 KID `0.0298404`. Step-50k → step-100k improved by `-7.6026` FID (`-13.69%`). This is a yellow flag rather than a green light: it improves, but the absolute value and slope are not enough to declare the route solved.
+
+Important normalization: current `100k @ batch96` is only `9.375%` of the PAE paper's `100k @ batch1024` / 80-epoch sample budget, roughly `7.5` PAE-paper-equivalent epochs. The first sample-budget-comparable point is still around `1.07M` current steps.
+
+Action taken: a step `150000` 5K GPU FID anchor controller was launched and is waiting for `step_00150000.pt`.
+
+```text
+pid: 74002
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.log
+status json: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
+```

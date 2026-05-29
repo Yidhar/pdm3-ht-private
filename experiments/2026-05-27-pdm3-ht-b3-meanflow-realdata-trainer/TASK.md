@@ -73,3 +73,24 @@ Later LR plan:
 - Batch-scaled MeanFlow cosine plan for batch `96`: `base_lr=7.5e-5`, `min_lr=7.5e-6`, `warmup_steps=13333`, `end_step=1070000`.
 - If applying to the current run after a checkpoint, do not rewarm; override optimizer param-group LR after checkpoint load and optionally ramp from `2e-4` to the cosine target over `2k–5k` steps.
 - Trigger for early switch: two consecutive 5K anchors plateau/worsen, or instability after ruling out sampling/eval noise. Otherwise keep the current healthy run stable and consider switching at a clean milestone such as `100k` or in a new branch.
+
+<!-- B3_STEP100000_5K_FID_AND_150K_GATE_20260529 -->
+
+## Status update — step-100k 5K FID and 150k gate
+
+- Step `100000` exact 5K true Inception anchor completed: **FID `47.925748666494485`**, MMD `0.02595176471424887`, KID `0.02984040431452506`.
+- Step `50000` exact 5K anchor was **FID `55.52831543442829`**, so 50k → 100k improved by `-7.6025667679338085` FID (`-13.69%`).
+- Interpretation is yellow-flag: improving, not collapsed, but absolute FID and slope are not yet reassuring.
+- Do not directly compare current `100k @ batch96` against PAE paper `100k @ batch1024` / 80ep. Current 100k has only `96/1024 = 9.375%` of that sample budget, roughly `7.5` PAE-paper-equivalent epochs.
+- A step `150000` 5K GPU FID anchor controller is running and waiting for `step_00150000.pt`.
+
+```text
+controller PID: 74002
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/b3_150k_5k_gpu_fid_then_resume_20260529T060838Z.log
+status: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_singleproc_template/eval/step_00150000/5k_anchor_control.json
+```
+
+Next gate:
+
+- If step-150k FID improves by several points, continue the current constant-`2e-4` run as the main control.
+- If step-150k is flat/worse, branch from step-100k/150k and test lower/cosine LR and sampler sensitivity before declaring the base route failed.
