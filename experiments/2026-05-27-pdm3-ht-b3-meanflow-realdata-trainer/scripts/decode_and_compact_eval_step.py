@@ -276,7 +276,11 @@ def make_grid(arr: np.ndarray, labels: Optional[torch.Tensor], path: Path, cols:
 
 
 def image_summary(arr: np.ndarray) -> Dict[str, Any]:
-    x = arr.astype(np.float32) / 255.0
+    # Use float64 for reductions.  5K ImageNet-256 arrays have nearly 1e9
+    # scalar values; float32 channel-wise summation can lose many small
+    # increments once the running sum grows past ~2^24, producing visibly wrong
+    # channel means even though the metric path itself is unaffected.
+    x = arr.astype(np.float64) / 255.0
     flat = x.reshape(-1, 3)
     return {
         "shape": list(arr.shape),

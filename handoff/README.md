@@ -1,5 +1,20 @@
 # PDM-3-HT handoff index
 
+<!-- PAE_RECON_FID_LOWER_BOUND_POINTER_20260530 -->
+
+## Latest PAE reconstruction FID lower-bound — 5K matched real-vs-reconstruction
+
+更新时间：`2026-05-30T16:08:58Z`
+
+Detailed handoff:
+
+```text
+handoff/PAE_RECONSTRUCTION_FID_LOWER_BOUND_5K_2026-05-30.md
+```
+
+Result: matched `real cropped ImageNet-256` vs `PAE decode(cached latent)` with 5K/5K true torchvision InceptionV3 ImageNet1K pool-2048 gives **FID `1.9952405483597886`**.  Integrity check: labels matched for all `5000` sampled global indices.  Interpretation: PAE cache/decoder is not the current B3 FID bottleneck; current generated FID `~48` is mainly model/training recipe gap, not PAE reconstruction ceiling.  HF artifact prefix: `b3_meanflow_realdata/pae_reconstruction_fid_lower_bound_5k_seed20260529`; commit `482dc1dc3d66828768716fb54fd4881c324f9648`.
+
+
 更新时间：`2026-05-29T07:32:07Z`
 
 ## 当前有效状态

@@ -1,0 +1,18 @@
+{
+  "created_at_utc": "2026-05-30T16:08:58Z",
+  "elapsed_sec": 126.45404199231416,
+  "fid": 1.9952405483597886,
+  "global_indices_match_count": 5000,
+  "hf_artifact_prefix": "b3_meanflow_realdata/pae_reconstruction_fid_lower_bound_5k_seed20260529",
+  "hf_commit_url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/482dc1dc3d66828768716fb54fd4881c324f9648",
+  "hf_upload_log": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/hf_upload_pae_reconstruction_fid_lower_bound_5k_20260530T161135Z.log",
+  "hf_upload_status": "ok",
+  "kid_poly3": -0.00012595911193669096,
+  "labels_match_real_vs_latent": true,
+  "local_metrics_json": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/pae_reconstruction_fid_lower_bound_5k_seed20260529/inception_metrics.json",
+  "mmd_rbf": -0.00013760608251600637,
+  "num_samples": 5000,
+  "output_dir": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/pae_reconstruction_fid_lower_bound_5k_seed20260529",
+  "seed": 20260529,
+  "status": "ok"
+}
