@@ -1,6 +1,6 @@
 # B3 MeanFlow reference-hparam b128 equivalent-epoch control — 2026-05-29
 
-更新时间：`2026-05-30T06:59:24Z`
+更新时间：`2026-05-30T07:07:12Z`
 
 ## Decision / correction
 
@@ -763,3 +763,116 @@ step_00050000.pt and step_00062500.pt were deleted as non-archive checkpoints su
 ```
 
 No active b128 train/sample/decode/post75k controller processes were present at the post-result check.
+
+## 2026-05-30 update: launched b128 lr1e-4 cosine continuation 75k -> 100k
+
+User requested continuing the current b128 lr1e-4 cosine/reference-hparam line from step 75k to step 100k.
+
+Important framing:
+
+```text
+b128 step 100,000 × 128 = 12,800,000 processed samples
+b96-equivalent step = 133,333
+```
+
+Therefore this is **not** the fair equal-samples comparison to old b96 step 100k; that fair anchor was b128 step 75k and is already complete. The step-100k continuation tests whether longer training on the slower b128 lr1e-4 cosine line keeps closing the quality gap.
+
+New config:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to100k.yaml
+/workspace/pdm3-ht-private-sync/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/configs/b3_meanflow_realdata_mfref_b128_lr1e4_cosine_eqepoch_resume_to100k.yaml
+```
+
+Config delta from resume-to-75k:
+
+```text
+max_steps: 100000
+resume_from: auto
+restore_rng: true
+start checkpoint: checkpoints/latest.pt -> step_00075000.pt
+checkpoint_every: 12500
+eval.every_steps: 12500
+```
+
+Launch state:
+
+```text
+launched_at_utc: 2026-05-30T07:04:34Z
+train pid: 93280
+pidfile: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/mfref_b128_eqepoch_100k.pid
+train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_resume_to100k_20260530T070434Z.log
+```
+
+Trainer resume confirmation:
+
+```text
+[2026-05-30 07:04:52] resumed checkpoint path=.../checkpoints/latest.pt step=75000 restore_rng=True
+[2026-05-30 07:04:52] optimizer lr=0.0001 scheduler=cosine min_lr=1e-05 warmup_steps=10000 decay_end_step=800000
+[2026-05-30 07:05:48] step=75050 loss=0.394192 lr=9.85027e-05 ... class_cond=True
+```
+
+Runtime at first post-launch check:
+
+```text
+GPU: H100, ~77.7 GiB used, ~97% util, ~588W, temp ~53C
+```
+
+Step-100k 5K FID controller:
+
+```text
+pid: 93277
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_100k_5k_gpu_fid_20260530T070434Z.sh
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_100k_5k_gpu_fid_20260530T070434Z.sh.setsid.log
+status: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/5k_anchor_control.json
+current status at launch check: waiting_for_checkpoint
+```
+
+Step-100k eval plan:
+
+```text
+num_generated / num_real: 5000 / 5000
+EMA: true
+sample_steps: 32
+script-level NFE: 32
+precision_mode: bf16_autocast
+sample seed: 2026053001
+real seed: 20260529
+```
+
+Step-100k HF upload/cleanup controller:
+
+```text
+pid: 93278
+script: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post100k_hf_upload_cleanup_20260530T070434Z.sh
+log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/logs/mfref_b128_eqepoch_post100k_hf_upload_cleanup_20260530T070434Z.sh.setsid.log
+status: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/hf_post100k_upload_status.json
+remote_prefix: b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k
+archive_extra_steps: 100000
+eval_start_step: 100000
+```
+
+Expected checkpoints/evals:
+
+```text
+step 87,500: trainer checkpoint + small eval, around 2026-05-30 10:50-11:20 UTC if speed holds
+step 100,000: trainer checkpoint + small eval + 5K true Inception FID + HF upload/cleanup
+ETA for step-100k 5K FID result: roughly 2026-05-30 14:30-15:10 UTC
+```
+
+Monitoring commands:
+
+```bash
+EXP=/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer
+RES="$EXP/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k"
+
+date -u '+now=%Y-%m-%dT%H:%M:%SZ'
+ps -p "$(cat $EXP/mfref_b128_eqepoch_100k.pid)" -o pid,ppid,pgid,sid,stat,etime,%cpu,%mem,rss,cmd || true
+ps -p "$(cat $EXP/mfref_b128_eqepoch_100k_fid_controller.pid)" -o pid,ppid,pgid,sid,stat,etime,%cpu,%mem,rss,cmd || true
+ps -p "$(cat $EXP/mfref_b128_eqepoch_post100k_hf_upload_cleanup.pid)" -o pid,ppid,pgid,sid,stat,etime,%cpu,%mem,rss,cmd || true
+
+tail -n 80 "$EXP/logs/mfref_b128_eqepoch_resume_to100k_20260530T070434Z.log"
+cat "$RES/eval/step_00100000/5k_anchor_control.json" 2>/dev/null || true
+cat "$RES/eval/step_00100000/hf_post100k_upload_status.json" 2>/dev/null || true
+nvidia-smi --query-gpu=utilization.gpu,power.draw,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits
+```
