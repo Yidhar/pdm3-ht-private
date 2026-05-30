@@ -1,6 +1,6 @@
 # B3 MeanFlow reference-hparam b128 equivalent-epoch control — 2026-05-29
 
-更新时间：`2026-05-30T07:07:12Z`
+更新时间：`2026-05-30T15:10:20Z`
 
 ## Decision / correction
 
@@ -875,4 +875,125 @@ tail -n 80 "$EXP/logs/mfref_b128_eqepoch_resume_to100k_20260530T070434Z.log"
 cat "$RES/eval/step_00100000/5k_anchor_control.json" 2>/dev/null || true
 cat "$RES/eval/step_00100000/hf_post100k_upload_status.json" 2>/dev/null || true
 nvidia-smi --query-gpu=utilization.gpu,power.draw,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits
+```
+
+## 2026-05-30 final update: b128 lr1e-4 cosine step-100k 5K true Inception FID
+
+The requested continuation from step 75k to step 100k completed successfully. Training, 5K EMA sampling, PAE decode + true Inception metrics, HF upload, and cleanup are all done.
+
+Run/eval identity:
+
+```text
+line: new b128 lr1e-4 cosine/reference-hparam
+step: 100,000
+processed samples: 100,000 × 128 = 12,800,000
+b96-equivalent: 133,333 steps
+EMA: true
+num_generated / num_real: 5,000 / 5,000
+sample_steps: 32
+script-level NFE: 32
+precision_mode: bf16_autocast
+feature extractor: torchvision InceptionV3 pool-2048, image-space after PAE decode
+created_at_utc: 2026-05-30T14:22:17+00:00
+elapsed_sec: 119.06227924115956
+```
+
+Result:
+
+| b128 step | b96-equivalent step | processed samples | FID ↓ | MMD RBF ↓ | KID poly3 ↓ |
+|---:|---:|---:|---:|---:|---:|
+| 30,000 | 40,000 | 3.84M | `72.25604594006893` | `0.044131939345276594` | `0.05689739428994445` |
+| 37,500 | 50,000 | 4.80M | `64.76958787726045` | `0.040048901451779084` | `0.0504804631539697` |
+| 50,000 | 66,667 | 6.40M | `58.18365476925243` | `0.03502626901133388` | `0.04275330488187956` |
+| 75,000 | 100,000 | 9.60M | `52.63151203759128` | `0.029638864545267207` | `0.035842746291795624` |
+| 100,000 | 133,333 | 12.80M | `48.34353029800525` | `0.02606114885682209` | `0.03040771164357592` |
+
+Slope of the new b128 line:
+
+```text
+30k   -> 37.5k: 72.256046 -> 64.769588 = -7.486458 FID
+37.5k -> 50k:   64.769588 -> 58.183655 = -6.585933 FID
+50k   -> 75k:   58.183655 -> 52.631512 = -5.552143 FID
+75k   -> 100k:  52.631512 -> 48.343530 = -4.287982 FID
+30k   -> 100k:  72.256046 -> 48.343530 = -23.912516 FID
+```
+
+Comparison caveat:
+
+```text
+b128 step 100k is not the fair equal-samples comparison to old b96 step 100k.
+It uses 12.8M samples versus old b96 step 100k's 9.6M samples, i.e. 33.3% more processed samples.
+The fair old-b96-100k-equivalent b128 anchor remains step 75k, where FID was 52.6315.
+```
+
+Still, for practical quality reference against the old b96 100k NFE=32 anchor:
+
+```text
+old b96 step 100k FID:        47.925748666494485  (9.6M samples)
+new b128 step 100k FID:       48.34353029800525   (12.8M samples)
+absolute delta new - old:     +0.417781631510765  worse
+```
+
+Conclusion:
+
+```text
+The b128 lr1e-4 cosine/reference-hparam line continues improving and nearly reaches the old b96 step-100k FID after an extra 33% processed samples. It has not proven better sample efficiency than the old b96 constant-2e-4 route, but the late-training continuation strongly narrows the practical-quality gap: FID 52.6315 at b128 75k -> 48.3435 at b128 100k.
+```
+
+Training completion and FD note:
+
+```text
+[2026-05-30 14:14:27] step=100000 loss=0.417053 lr=9.71485e-05
+[2026-05-30 14:14:30] FD audit step=100000 fd_rel=0.0816215 degen=0 forced_non_degen=False
+[2026-05-30 14:14:51] checkpoint saved step=100000 path=.../checkpoints/step_00100000.pt
+[2026-05-30 14:14:57] DONE practical_gate=False final_step=100000 final_loss=0.41705286502838135
+```
+
+The built-in FD rel at step 100k is in the same TF32-sensitive diagnostic regime already explained by the dedicated A/B/C audit; it should not be reinterpreted as a new JVP-path failure without rerunning strict TF32-off FD audit.
+
+Artifacts:
+
+```text
+metrics JSON:
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/inception_eval_5k/inception_metrics.json
+
+metrics MD:
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/inception_eval_5k/inception_metrics.md
+
+sample latents:
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/sample_latents_5000.safetensors
+```
+
+Controller states:
+
+```text
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/5k_anchor_control.json
+status: done
+updated_at_utc: 2026-05-30T14:23:01Z
+
+/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fullcache_realdata_mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/eval/step_00100000/hf_post100k_upload_status.json
+status: done
+updated_at_utc: 2026-05-30T14:26:58Z
+```
+
+HF upload completed:
+
+| artifact | HF path | commit |
+|---|---|---|
+| checkpoint step 100k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/checkpoints/step_00100000.pt` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/2fe88fc751f0ff75c5e86d9dce7529a3a94c8869 |
+| eval step 100k | `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_eqepoch_37k5_50k/step_00100000` | https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/2df632b4dac03156d64ed5a8639dd816f673b52f |
+
+Local checkpoint state after post-100k upload/cleanup:
+
+```text
+checkpoints/latest.pt -> step_00100000.pt
+checkpoints/step_00100000.pt remains local as latest, size about 11G
+previous step 75k / 87.5k local checkpoints were pruned by the cleanup policy
+```
+
+Post-result process/GPU state:
+
+```text
+No active b128 train/sample/decode/100k-controller processes.
+GPU util 0%, memory.used 0 MB at the post-result check.
 ```
