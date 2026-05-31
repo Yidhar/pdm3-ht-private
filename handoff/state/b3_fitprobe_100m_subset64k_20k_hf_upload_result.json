@@ -1,0 +1,42 @@
+{
+  "updated_at_utc": "2026-05-31T03:28:54Z",
+  "status": "uploaded",
+  "hf_repo": "LAXMAYDAY/pdm3-ht-model-artifacts",
+  "hf_repo_url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts",
+  "hf_path_in_repo": "b3_meanflow_realdata/fitprobe_100m_subset64k_b384_lr5e4",
+  "hf_commit": "ad334901017f194d2bf2b6898d9a1c705db7fd39",
+  "hf_commit_url": "https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts/commit/ad334901017f194d2bf2b6898d9a1c705db7fd39",
+  "local_export_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fitprobe_100m_subset64k_b384_lr5e4/hf_export",
+  "local_run_path": "/workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-trainer/results/fitprobe_100m_subset64k_b384_lr5e4",
+  "uploaded_policy": {
+    "included": [
+      "step_00020000_slim_no_optimizer.pt",
+      "step_20k EMA/raw 5K latent safetensors",
+      "metrics json/md",
+      "generated grids",
+      "config",
+      "summary",
+      "checksums"
+    ],
+    "excluded": [
+      "full optimizer checkpoints",
+      "all intermediate full checkpoints",
+      "decoded_and_real_imagenet256_samples.npz",
+      "inception_features.npz",
+      "raw ImageNet / real image dumps"
+    ]
+  },
+  "step20k_metrics": {
+    "protocol": "PAE decode image-space true torchvision InceptionV3 ImageNet1K pool-2048 FID, NFE/sample_steps=32, subset-real first 65536 ImageNet-256 reference, latent-subset label marginal",
+    "ema_5k": {
+      "fid": 58.64321275926517,
+      "mmd_rbf": 0.03321789329154545,
+      "kid_poly3": 0.041432888387396005
+    },
+    "raw_5k": {
+      "fid": 61.62807074039921,
+      "mmd_rbf": 0.0353458204251087,
+      "kid_poly3": 0.04430557547555347
+    }
+  }
+}

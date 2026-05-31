@@ -76,6 +76,7 @@ def load_real_uint8_reference(
     seed: int,
     *,
     shard_glob: str = "images_uint8_shard*.safetensors",
+    max_global_index_exclusive: Optional[int] = None,
 ) -> Tuple[np.ndarray, torch.Tensor, Optional[torch.Tensor], List[Dict[str, Any]]]:
     """Deterministically sample real cropped ImageNet-256 images from safetensors.
 
@@ -87,11 +88,18 @@ def load_real_uint8_reference(
     """
     files = list_real_image_shards(data_dir, shard_glob)
     lengths = [read_real_shard_len(p) for p in files]
-    total = int(sum(lengths))
+    total_all = int(sum(lengths))
+    if max_global_index_exclusive is not None and int(max_global_index_exclusive) > 0:
+        total = min(total_all, int(max_global_index_exclusive))
+    else:
+        total = total_all
     if n <= 0:
         raise ValueError("n must be positive")
     if n > total:
-        raise ValueError(f"Requested {n} real images but cache only contains {total}")
+        raise ValueError(
+            f"Requested {n} real images but selected real-index pool only contains {total} "
+            f"(cache_total={total_all}, max_global_index_exclusive={max_global_index_exclusive})"
+        )
 
     rng = np.random.default_rng(seed)
     global_indices = np.sort(rng.choice(total, size=n, replace=False))
@@ -364,6 +372,15 @@ def main() -> int:
     p.add_argument("--real-shard-glob", default="images_uint8_shard*.safetensors")
     p.add_argument("--num-real", type=int, default=0, help="0 means match generated metric sample count")
     p.add_argument("--real-seed", type=int, default=20260528)
+    p.add_argument(
+        "--real-max-samples",
+        type=int,
+        default=0,
+        help=(
+            "if >0, sample real references only from global cache indices [0, real_max_samples); "
+            "useful for small-subset fit probes where generated labels/training data come from the same first-N subset"
+        ),
+    )
     p.add_argument("--max-gen-samples", type=int, default=0, help="optional cap for generated samples")
     p.add_argument("--decode-device", default="cpu", help="cpu/cuda/cuda:0/auto; default cpu to avoid H100 contention")
     p.add_argument("--decode-dtype", default="fp32", help="fp32/bf16/fp16; CPU coerces to fp32")
@@ -411,6 +428,7 @@ def main() -> int:
         n_real,
         args.real_seed,
         shard_glob=args.real_shard_glob,
+        max_global_index_exclusive=(int(args.real_max_samples) if int(args.real_max_samples) > 0 else None),
     )
 
     print(f"Loading PAE and decoding {n_gen} generated latents on {decode_device}", flush=True)
@@ -489,6 +507,7 @@ def main() -> int:
         "pae_ckpt": str(args.pae_ckpt),
         "real_image_cache_dir": str(args.real_image_cache),
         "real_shard_glob": str(args.real_shard_glob),
+        "real_max_samples": int(args.real_max_samples),
         "decode_device": str(decode_device),
         "decode_dtype": str(decode_dtype),
         "decode_batch_size": int(args.decode_batch_size),

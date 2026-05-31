@@ -31,6 +31,7 @@ os.environ.setdefault("XFORMERS_DISABLED", "1")
 os.environ.setdefault("DISABLE_XFORMERS", "1")
 
 import torch
+from safetensors import safe_open
 from safetensors.torch import save_file
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -116,6 +117,71 @@ def make_labels(
     return torch.randint(0, int(num_classes), (int(num_samples),), generator=generator, dtype=torch.long)
 
 
+def load_label_pool_from_latent_subset(
+    *,
+    latent_cache: Path,
+    shard_glob: str,
+    max_samples: int,
+) -> torch.Tensor:
+    """Load labels from the first-N latent-cache samples.
+
+    This is used by small-subset fit probes so generated-label marginal matches
+    the training subset instead of assuming a perfectly uniform ImageNet prior.
+    The pool is tiny for current probes (e.g. 64k int64 labels), so materializing
+    it is simpler and more robust than building a global-index map.
+    """
+    files = sorted([p for p in latent_cache.glob(shard_glob) if p.is_file()])
+    if not files:
+        raise FileNotFoundError(f"No latent shards matched {latent_cache / shard_glob}")
+    remaining = int(max_samples)
+    if remaining <= 0:
+        raise ValueError("label subset max_samples must be positive")
+    chunks: List[torch.Tensor] = []
+    for path in files:
+        if remaining <= 0:
+            break
+        with safe_open(str(path), framework="pt", device="cpu") as sf:
+            if "labels" not in sf.keys():
+                raise KeyError(f"{path} missing key 'labels'; keys={list(sf.keys())}")
+            n = int(sf.get_slice("labels").get_shape()[0])
+            take = min(n, remaining)
+            chunks.append(sf.get_slice("labels")[:take].long().cpu().contiguous())
+        remaining -= take
+    if not chunks:
+        raise RuntimeError(f"No labels loaded from {latent_cache}")
+    pool = torch.cat(chunks, dim=0)
+    if pool.numel() < int(max_samples):
+        raise ValueError(f"Requested label pool of {max_samples} but only found {pool.numel()} samples")
+    return pool
+
+
+def make_labels_from_latent_subset(
+    *,
+    num_samples: int,
+    latent_cache: Path,
+    shard_glob: str,
+    max_samples: int,
+    generator: torch.Generator,
+) -> tuple[torch.Tensor, Dict[str, Any]]:
+    pool = load_label_pool_from_latent_subset(latent_cache=latent_cache, shard_glob=shard_glob, max_samples=max_samples)
+    choice = torch.randint(0, int(pool.numel()), (int(num_samples),), generator=generator, dtype=torch.long)
+    labels = pool.index_select(0, choice).long().contiguous()
+    hist = torch.bincount(pool.long(), minlength=1000).float()
+    nonzero = int((hist > 0).sum().item())
+    meta = {
+        "label_source": "latent_subset",
+        "label_latent_cache": str(latent_cache),
+        "label_latent_shard_glob": shard_glob,
+        "label_subset_max_samples": int(max_samples),
+        "label_pool_size": int(pool.numel()),
+        "label_pool_unique_count": nonzero,
+        "label_pool_min_count_nonzero": int(hist[hist > 0].min().item()) if nonzero else None,
+        "label_pool_max_count": int(hist.max().item()) if hist.numel() else None,
+        "sampled_label_unique_count": int(torch.unique(labels).numel()),
+    }
+    return labels, meta
+
+
 def load_model_and_optional_ema(
     *,
     cfg: Dict[str, Any],
@@ -178,6 +244,15 @@ def main() -> int:
     parser.add_argument("--device", default="auto")
     parser.add_argument("--seed", type=int, default=2026052850)
     parser.add_argument("--use-ema", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--label-source",
+        choices=["auto", "uniform", "latent-subset"],
+        default="auto",
+        help="auto preserves old behavior: config fixed_labels if present, otherwise uniform over classes.",
+    )
+    parser.add_argument("--label-latent-cache", type=Path, default=None, help="default: config data.data_path")
+    parser.add_argument("--label-latent-shard-glob", default="", help="default: config data.file_glob")
+    parser.add_argument("--label-subset-max-samples", type=int, default=0, help="default: config data.max_samples")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
@@ -237,12 +312,31 @@ def main() -> int:
     num_samples = int(args.num_samples)
     batch_size = int(args.sample_batch_size)
     num_classes = int(data_cfg.get("num_classes", 1000))
-    labels_all = make_labels(
-        num_samples=num_samples,
-        num_classes=num_classes,
-        fixed_labels=eval_cfg.get("fixed_labels"),
-        generator=label_gen,
-    )
+    label_meta: Dict[str, Any] = {"label_source": args.label_source}
+    if args.label_source == "latent-subset":
+        label_latent_cache = (args.label_latent_cache or Path(data_cfg["data_path"])).resolve()
+        label_shard_glob = str(args.label_latent_shard_glob or data_cfg.get("file_glob", "*.safetensors"))
+        label_subset_max = int(args.label_subset_max_samples or data_cfg.get("max_samples") or data_cfg.get("expected_total") or 0)
+        labels_all, label_meta = make_labels_from_latent_subset(
+            num_samples=num_samples,
+            latent_cache=label_latent_cache,
+            shard_glob=label_shard_glob,
+            max_samples=label_subset_max,
+            generator=label_gen,
+        )
+    else:
+        fixed = eval_cfg.get("fixed_labels") if args.label_source == "auto" else None
+        labels_all = make_labels(
+            num_samples=num_samples,
+            num_classes=num_classes,
+            fixed_labels=fixed,
+            generator=label_gen,
+        )
+        label_meta = {
+            "label_source": "config_fixed_labels" if fixed else "uniform",
+            "fixed_labels_count": len(fixed) if fixed else 0,
+            "sampled_label_unique_count": int(torch.unique(labels_all).numel()),
+        }
 
     print(
         json.dumps(
@@ -347,6 +441,7 @@ def main() -> int:
         "label_min": int(labels_all.min().item()),
         "label_max": int(labels_all.max().item()),
         "label_unique_count": label_unique,
+        **label_meta,
         "cuda_peak_memory_mb": peak_mb,
         "elapsed_sec": float(time.perf_counter() - started),
         **ckpt_meta,

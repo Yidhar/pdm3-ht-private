@@ -105,6 +105,7 @@ class ShardIndexedLatentDataset(Dataset):
         latent_multiplier: float = 1.0,
         latent_stats_path: Optional[str | Path] = None,
         max_shards: Optional[int] = None,
+        max_samples: Optional[int] = None,
         skip_unreadable: bool = True,
     ) -> None:
         self.data_dir = Path(data_dir).resolve()
@@ -112,6 +113,9 @@ class ShardIndexedLatentDataset(Dataset):
         self.flip_prob = float(flip_prob)
         self.latent_norm = bool(latent_norm)
         self.latent_multiplier = float(latent_multiplier)
+        self.max_samples = int(max_samples) if max_samples is not None else None
+        if self.max_samples is not None and self.max_samples <= 0:
+            raise ValueError("max_samples must be positive when provided")
         self.skip_unreadable = bool(skip_unreadable)
         self.skipped_files: List[Dict[str, str]] = []
         self.shards: List[ShardInfo] = []
@@ -130,7 +134,10 @@ class ShardIndexedLatentDataset(Dataset):
             raise FileNotFoundError(f"no files matching {self.file_glob!r} in {self.data_dir}")
 
         total = 0
+        source_total_seen = 0
         for path in files:
+            if self.max_samples is not None and total >= self.max_samples:
+                break
             try:
                 with safe_open(str(path), framework="pt", device="cpu") as f:
                     keys = set(f.keys())
@@ -154,7 +161,17 @@ class ShardIndexedLatentDataset(Dataset):
                         self.latent_shape = shard_latent_shape
                     elif self.latent_shape != shard_latent_shape:
                         raise ValueError(f"latent shape changed: {self.latent_shape} vs {shard_latent_shape} in {path}")
-                    n = int(labels_shape[0])
+                    source_n = int(labels_shape[0])
+                    source_total_seen += source_n
+                    if self.max_samples is not None:
+                        remaining = int(self.max_samples) - total
+                        if remaining <= 0:
+                            break
+                        n = min(source_n, remaining)
+                    else:
+                        n = source_n
+                    if n <= 0:
+                        continue
                     info = ShardInfo(
                         path=str(path),
                         num_samples=n,
@@ -173,6 +190,7 @@ class ShardIndexedLatentDataset(Dataset):
         if not self.shards:
             raise RuntimeError(f"all candidate shards were skipped in {self.data_dir}; skipped={self.skipped_files[:5]}")
         self.total = total
+        self.source_total_seen = int(source_total_seen)
 
         self._latent_mean: Optional[torch.Tensor] = None
         self._latent_std: Optional[torch.Tensor] = None
@@ -273,6 +291,8 @@ class ShardIndexedLatentDataset(Dataset):
             "file_glob": self.file_glob,
             "num_shards": len(self.shards),
             "total_samples": int(self.total),
+            "max_samples": self.max_samples,
+            "source_total_seen_before_truncation": int(self.source_total_seen),
             "latent_shape": self.latent_shape,
             "flip_prob": self.flip_prob,
             "latent_norm": self.latent_norm,
@@ -859,6 +879,7 @@ def main() -> None:
         latent_multiplier=float(data_cfg.get("latent_multiplier", 1.0)),
         latent_stats_path=data_cfg.get("latent_stats_path"),
         max_shards=data_cfg.get("max_shards"),
+        max_samples=data_cfg.get("max_samples"),
         skip_unreadable=bool(data_cfg.get("skip_unreadable", True)),
     )
     dataset_summary = dataset.summary(include_shards=8)

@@ -337,3 +337,47 @@ train log: /workspace/PDM/experiments/2026-05-27-pdm3-ht-b3-meanflow-realdata-tr
 Primary decision point: compare the new b128/lr1e-4/cosine step-50k 5K FID against the old b96/constant-2e-4 step-50k 5K FID `55.528315`.
 
 After the 5K metrics are written, post-controller PID `75434` runs one HF upload/cleanup pass to `b3_meanflow_realdata/mfref_b128_lr1e4_cosine_50k`.
+
+<!-- B3_FITPROBE_100M_SUBSET64K_20K_20260531 -->
+
+## B3 100M subset64k fitprobe result — 2026-05-31
+
+Run `fitprobe_100m_subset64k_b384_lr5e4` completed to step `20,000`.
+
+Config/code support added in this repo:
+
+```text
+configs/b3_meanflow_realdata_100m_subset64k_b384_lr5e4_fitprobe.yaml
+scripts/run_fitprobe_anchor_and_resume.sh
+scripts/train_b3_meanflow_realdata.py                 # data.max_samples support
+scripts/sample_b3_meanflow_eval_latents.py            # latent-subset label-source support
+scripts/decode_and_inception_eval_step.py             # real-max-samples subset-real support
+```
+
+Protocol: first `65,536` PAE/ImageNet-256 latent subset, ~`101M` B3 MeanFlow model, batch `384`, cosine LR `5e-4 -> 5e-5`, `equal_prob=0.75`; PAE decode to image-space; true torchvision InceptionV3 pool-2048 FID; `sample_steps/NFE=32`; real reference restricted to the same first-64k subset; generated labels sampled from the latent-subset label marginal.
+
+Main FID anchors:
+
+| step | mode | samples | FID ↓ | MMD_RBF ↓ | KID_poly3 ↓ |
+|---:|---|---:|---:|---:|---:|
+| 2,000 | EMA | 2K | 180.865669 | 0.0914749 | 0.1248730 |
+| 4,000 | EMA | 2K | 108.822443 | 0.0575764 | 0.0771564 |
+| 4,000 | raw | 2K | 103.017008 | 0.0537740 | 0.0704296 |
+| 6,000 | EMA | 2K | 92.487138 | 0.0457329 | 0.0586011 |
+| 6,000 | raw | 2K | 101.575154 | 0.0520310 | 0.0690082 |
+| 10,000 | raw | 5K | 77.800892 | 0.0463395 | 0.0595059 |
+| 10,000 | EMA | 5K | 63.142481 | 0.0378654 | 0.0468768 |
+| 20,000 | raw | 5K | 61.628071 | 0.0353458 | 0.0443056 |
+| 20,000 | EMA | 5K | 58.643213 | 0.0332179 | 0.0414329 |
+
+Loss window bottomed around steps `2k–4k` and drifted upward through `20k`; FID still improved, but the slope became shallow. Since the PAE reconstruction lower-bound is `FID≈1.99524`, this recipe is not a good lower-bound path.
+
+HF artifact:
+
+```text
+repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+path: b3_meanflow_realdata/fitprobe_100m_subset64k_b384_lr5e4
+commit: ad334901017f194d2bf2b6898d9a1c705db7fd39
+```
+
+Decision: archive this result and move to an easier lower-bound probe, preferably first-8k or class-balanced 5k–10k, matched subset-real FID, `equal_prob=0.5`, and `lr=2e-4/3e-4`.

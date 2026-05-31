@@ -1,5 +1,30 @@
 # PDM-3-HT handoff index
 
+<!-- B3_FITPROBE_100M_SUBSET64K_20K_POINTER_20260531 -->
+
+## Latest lower-bound probe — B3 100M subset64k fitprobe step-20k
+
+更新时间：`2026-05-31T03:28:54Z`
+
+Detailed handoff:
+
+```text
+handoff/B3_FITPROBE_100M_SUBSET64K_20K_2026-05-31.md
+```
+
+Result summary: `fitprobe_100m_subset64k_b384_lr5e4` completed to step `20,000` on the first `65,536` PAE/ImageNet-256 latents with a ~`101M` B3 MeanFlow model. True image-space Inception FID used PAE decode, `sample_steps/NFE=32`, subset-real reference, and latent-subset label marginal. Step-20k 5K FID: EMA `58.643213`, raw `61.628071`. Step-10k -> 20k EMA improved only `63.142481 -> 58.643213`; the route learns but plateaus far above the PAE reconstruction lower-bound `1.995241`.
+
+HF artifact prefix:
+
+```text
+repo: https://huggingface.co/LAXMAYDAY/pdm3-ht-model-artifacts
+path: b3_meanflow_realdata/fitprobe_100m_subset64k_b384_lr5e4
+commit: ad334901017f194d2bf2b6898d9a1c705db7fd39
+```
+
+Decision: do not continue this exact `100M / first-64k / b384 / lr5e-4 / equal_prob=0.75` recipe as the lower-bound route. Next probe should be easier/smaller, e.g. first-8k or class-balanced 5k–10k, with matched subset-real FID, `equal_prob=0.5`, and `lr=2e-4/3e-4`.
+
+
 <!-- PAE_RECON_FID_LOWER_BOUND_POINTER_20260530 -->
 
 ## Latest PAE reconstruction FID lower-bound — 5K matched real-vs-reconstruction
